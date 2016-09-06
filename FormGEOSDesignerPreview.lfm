@@ -1,0 +1,78 @@
+object GEOSDesignerPreviewForm: TGEOSDesignerPreviewForm
+  Left = 1006
+  Height = 351
+  Top = 277
+  Width = 442
+  BorderStyle = bsSizeToolWin
+  Caption = 'GEOS Designer Preview'
+  ClientHeight = 351
+  ClientWidth = 442
+  OnCreate = FormCreate
+  Position = poDefaultPosOnly
+  LCLVersion = '1.6.0.4'
+  object ScrollBox1: TScrollBox
+    Left = 8
+    Height = 301
+    Top = 42
+    Width = 426
+    HorzScrollBar.Increment = 32
+    HorzScrollBar.Page = 320
+    HorzScrollBar.Smooth = True
+    HorzScrollBar.Tracking = True
+    VertScrollBar.Increment = 20
+    VertScrollBar.Page = 200
+    VertScrollBar.Smooth = True
+    VertScrollBar.Tracking = True
+    Align = alClient
+    BorderSpacing.Around = 8
+    BorderStyle = bsNone
+    ClientHeight = 301
+    ClientWidth = 426
+    TabOrder = 0
+    OnMouseWheel = ScrollBox1MouseWheel
+    object ImgPreview: TImage
+      Left = 0
+      Height = 200
+      Top = 0
+      Width = 320
+      AntialiasingMode = amOff
+      Stretch = True
+    end
+  end
+  object Panel1: TPanel
+    Left = 0
+    Height = 34
+    Top = 0
+    Width = 442
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 34
+    ClientWidth = 442
+    TabOrder = 1
+    object Label1: TLabel
+      Left = 8
+      Height = 15
+      Top = 12
+      Width = 30
+      Caption = 'Scale:'
+      ParentColor = False
+    end
+    object CmbScale: TComboBox
+      Left = 80
+      Height = 23
+      Top = 8
+      Width = 100
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        '1x'
+        '2x'
+        '4x'
+      )
+      OnChange = CmbScaleChange
+      Style = csDropDownList
+      TabOrder = 0
+      Text = '1x'
+    end
+  end
+end

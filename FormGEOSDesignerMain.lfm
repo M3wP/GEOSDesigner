@@ -1,0 +1,36 @@
+object GEOSDesignerMainForm: TGEOSDesignerMainForm
+  Left = 358
+  Height = 540
+  Top = 145
+  Width = 640
+  Caption = 'GEOSDesignerMainForm'
+  ClientHeight = 520
+  ClientWidth = 640
+  Constraints.MinHeight = 540
+  Constraints.MinWidth = 640
+  Menu = GEOSDesignerMainDMod.MainMenu1
+  OnClose = FormClose
+  OnShow = FormShow
+  Position = poDefaultPosOnly
+  LCLVersion = '1.6.0.4'
+  object ToolBar2: TToolBar
+    Left = 0
+    Height = 24
+    Top = 0
+    Width = 640
+    AutoSize = True
+    Caption = 'ToolBar2'
+    Images = GEOSDesignerMainDMod.ImgLstItems
+    TabOrder = 0
+    object ToolButton2: TToolButton
+      Left = 1
+      Top = 2
+      Action = GEOSDesignerMainDMod.ActEditAddElem
+    end
+    object ToolButton3: TToolButton
+      Left = 24
+      Top = 2
+      Action = GEOSDesignerMainDMod.ActEditDelElem
+    end
+  end
+end

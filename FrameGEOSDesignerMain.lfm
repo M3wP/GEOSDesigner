@@ -1,0 +1,763 @@
+object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
+  Left = 0
+  Height = 584
+  Top = 0
+  Width = 673
+  BorderSpacing.Around = 4
+  ClientHeight = 584
+  ClientWidth = 673
+  TabOrder = 0
+  DesignLeft = 687
+  DesignTop = 177
+  object Panel1: TPanel
+    Left = 0
+    Height = 556
+    Top = 28
+    Width = 168
+    Align = alLeft
+    BevelOuter = bvNone
+    ClientHeight = 556
+    ClientWidth = 168
+    Constraints.MinWidth = 120
+    TabOrder = 0
+    object ChkLstBxElements: TCheckListBox
+      Left = 0
+      Height = 537
+      Top = 19
+      Width = 168
+      Align = alClient
+      ItemHeight = 0
+      OnClick = ChkLstBxElementsClick
+      OnClickCheck = ChkLstBxElementsClickCheck
+      OnItemClick = ChkLstBxElementsItemClick
+      TabOrder = 0
+    end
+    object Label2: TLabel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 168
+      Align = alTop
+      BorderSpacing.Bottom = 4
+      Caption = 'Elements:'
+      ParentColor = False
+    end
+  end
+  object Splitter1: TSplitter
+    Left = 168
+    Height = 556
+    Top = 28
+    Width = 6
+  end
+  object NtBkDetails: TNotebook
+    Left = 174
+    Height = 556
+    Top = 28
+    Width = 499
+    PageIndex = 2
+    Align = alClient
+    Constraints.MinWidth = 280
+    TabOrder = 2
+    TabStop = True
+    object PgGraphicsString: TPage
+      object Label3: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 8
+        Caption = 'GraphicsString Details:'
+        ParentColor = False
+      end
+      object Panel3: TPanel
+        Left = 0
+        Height = 49
+        Top = 23
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 4
+        BevelOuter = bvNone
+        ClientHeight = 49
+        ClientWidth = 499
+        TabOrder = 0
+        object Label1: TLabel
+          Left = 0
+          Height = 15
+          Top = 0
+          Width = 50
+          Caption = 'Identifier:'
+          ParentColor = False
+        end
+        object LblGrphStrIdent: TLabel
+          Left = 72
+          Height = 15
+          Top = 0
+          Width = 83
+          Caption = 'LblGrphStrIdent'
+          ParentColor = False
+        end
+        object ToolBar1: TToolBar
+          Left = 0
+          Height = 24
+          Top = 25
+          Width = 499
+          Align = alBottom
+          AutoSize = True
+          Caption = 'ToolBar1'
+          Images = GEOSDesignerMainDMod.ImgLstItems
+          TabOrder = 0
+          object ToolButton1: TToolButton
+            Left = 1
+            Top = 2
+            Caption = 'ToolButton1'
+            ImageIndex = 0
+          end
+          object TlBtnGrphDelete: TToolButton
+            Left = 24
+            Top = 2
+            Caption = 'TlBtnGrphDelete'
+            ImageIndex = 1
+            OnClick = TlBtnGrphDeleteClick
+          end
+          object TlBtnGrphEdit: TToolButton
+            Left = 47
+            Top = 2
+            Caption = 'TlBtnGrphEdit'
+            ImageIndex = 2
+          end
+        end
+      end
+      object LstVwGrphStrItems: TListView
+        Left = 0
+        Height = 480
+        Top = 76
+        Width = 499
+        Align = alClient
+        Columns = <        
+          item
+            Width = 20
+          end        
+          item
+            Caption = 'Type'
+            Width = 100
+          end        
+          item
+            Caption = 'Command'
+            Width = 100
+          end        
+          item
+            Caption = 'Data'
+            Width = 266
+          end>
+        HideSelection = False
+        ReadOnly = True
+        RowSelect = True
+        SmallImages = GEOSDesignerMainDMod.ImgLstGrphsStr
+        TabOrder = 1
+        ViewStyle = vsReport
+        OnResize = LstVwGrphStrItemsResize
+        OnSelectItem = LstVwGrphStrItemsSelectItem
+      end
+    end
+    object PgDoMenu: TPage
+      object Label4: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 8
+        Caption = 'DoMenu Details:'
+        ParentColor = False
+      end
+      object Panel4: TPanel
+        Left = 0
+        Height = 49
+        Top = 23
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 4
+        BevelOuter = bvNone
+        ClientHeight = 49
+        ClientWidth = 499
+        TabOrder = 0
+        object Label5: TLabel
+          Left = 0
+          Height = 15
+          Top = 0
+          Width = 50
+          Caption = 'Identifier:'
+          ParentColor = False
+        end
+        object LblDoMenuIdent: TLabel
+          Left = 72
+          Height = 15
+          Top = 0
+          Width = 89
+          Caption = 'LblDoMenuIdent'
+          ParentColor = False
+        end
+        object ToolBar2: TToolBar
+          Left = 0
+          Height = 24
+          Top = 25
+          Width = 499
+          Align = alBottom
+          AutoSize = True
+          Caption = 'ToolBar2'
+          Images = GEOSDesignerMainDMod.ImgLstItems
+          TabOrder = 0
+          object ToolButton2: TToolButton
+            Left = 1
+            Top = 2
+            Caption = 'ToolButton1'
+            ImageIndex = 0
+          end
+          object TlBtnMenuDelete: TToolButton
+            Left = 24
+            Top = 2
+            Caption = 'TlBtnGrphDelete'
+            ImageIndex = 1
+          end
+        end
+      end
+      object TreeVwDoMenu: TTreeView
+        Left = 0
+        Height = 480
+        Top = 76
+        Width = 160
+        Align = alLeft
+        DefaultItemHeight = 18
+        ReadOnly = True
+        ScrollBars = ssAutoBoth
+        TabOrder = 1
+        OnSelectionChanged = TreeVwDoMenuSelectionChanged
+        Options = [tvoAutoItemHeight, tvoHideSelection, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
+      end
+      object Splitter2: TSplitter
+        Left = 160
+        Height = 480
+        Top = 76
+        Width = 6
+      end
+      object Panel5: TPanel
+        Left = 166
+        Height = 480
+        Top = 76
+        Width = 333
+        Align = alClient
+        BevelOuter = bvNone
+        ClientHeight = 480
+        ClientWidth = 333
+        TabOrder = 3
+        object Panel6: TPanel
+          Left = 0
+          Height = 256
+          Top = 0
+          Width = 333
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 256
+          ClientWidth = 333
+          TabOrder = 0
+          object DividerBevel1: TDividerBevel
+            Left = 0
+            Height = 15
+            Top = 0
+            Width = 333
+            Caption = 'Menu Level Settings'
+            Align = alTop
+            BorderSpacing.Bottom = 8
+            LeftIndent = 0
+            ParentFont = False
+          end
+          object Label9: TLabel
+            Left = 8
+            Height = 15
+            Top = 28
+            Width = 59
+            Caption = 'Alignment:'
+            ParentColor = False
+          end
+          object Label10: TLabel
+            Left = 8
+            Height = 15
+            Top = 62
+            Width = 40
+            Caption = 'Bounds'
+            ParentColor = False
+          end
+          object ChkBxDoMenuItmCnstrnd: TCheckBox
+            Left = 113
+            Height = 19
+            Top = 194
+            Width = 20
+            TabOrder = 0
+          end
+          object ChkBxDoMenuItmVisible: TCheckBox
+            Left = 113
+            Height = 19
+            Top = 226
+            Width = 20
+            TabOrder = 1
+          end
+          object CmbDoMenuItmAlign: TComboBox
+            Left = 112
+            Height = 23
+            Top = 24
+            Width = 136
+            Enabled = False
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Horizontal'
+              'Vertical'
+            )
+            Style = csDropDownList
+            TabOrder = 2
+            Text = 'Horizontal'
+          end
+          object Label11: TLabel
+            Left = 56
+            Height = 15
+            Top = 62
+            Width = 24
+            Caption = 'Top:'
+            ParentColor = False
+          end
+          object Label12: TLabel
+            Left = 56
+            Height = 15
+            Top = 94
+            Width = 23
+            Caption = 'Left:'
+            ParentColor = False
+          end
+          object Label13: TLabel
+            Left = 56
+            Height = 15
+            Top = 126
+            Width = 43
+            Caption = 'Bottom:'
+            ParentColor = False
+          end
+          object Label14: TLabel
+            Left = 56
+            Height = 15
+            Top = 158
+            Width = 31
+            Caption = 'Right:'
+            ParentColor = False
+          end
+          object Label15: TLabel
+            Left = 8
+            Height = 15
+            Top = 196
+            Width = 67
+            Caption = 'Constrained:'
+            ParentColor = False
+          end
+          object Label16: TLabel
+            Left = 8
+            Height = 15
+            Top = 228
+            Width = 37
+            Caption = 'Visible:'
+            ParentColor = False
+          end
+          object SpEdtDoMenuItmTop: TSpinEdit
+            Left = 112
+            Height = 23
+            Top = 58
+            Width = 96
+            MaxValue = 199
+            TabOrder = 3
+          end
+          object SpEdtDoMenuItmLeft: TSpinEdit
+            Left = 112
+            Height = 23
+            Top = 90
+            Width = 96
+            MaxValue = 319
+            TabOrder = 4
+          end
+          object SpEdtDoMenuItmBottom: TSpinEdit
+            Left = 112
+            Height = 23
+            Top = 122
+            Width = 96
+            MaxValue = 199
+            TabOrder = 5
+          end
+          object SpEdtDoMenuItmRight: TSpinEdit
+            Left = 112
+            Height = 23
+            Top = 154
+            Width = 96
+            MaxValue = 319
+            TabOrder = 6
+          end
+        end
+        object Panel7: TPanel
+          Left = 0
+          Height = 224
+          Top = 256
+          Width = 333
+          Align = alClient
+          BevelOuter = bvNone
+          ClientHeight = 224
+          ClientWidth = 333
+          TabOrder = 1
+          object Label6: TLabel
+            Left = 8
+            Height = 15
+            Top = 40
+            Width = 77
+            Caption = 'Item Identifier:'
+            ParentColor = False
+          end
+          object LblDoMenuItmIdent: TLabel
+            Left = 112
+            Height = 15
+            Top = 40
+            Width = 107
+            Caption = 'LblDoMenuItmIdent'
+            ParentColor = False
+          end
+          object DividerBevel2: TDividerBevel
+            Left = 0
+            Height = 15
+            Top = 8
+            Width = 333
+            Caption = 'Menu Item Settings'
+            Align = alTop
+            BorderSpacing.Top = 8
+            LeftIndent = 0
+            ParentFont = False
+          end
+          object EdtDoMenuItmText: TEdit
+            Left = 112
+            Height = 23
+            Top = 72
+            Width = 136
+            TabOrder = 0
+            Text = 'EdtDoMenuItmText'
+          end
+          object Label7: TLabel
+            Left = 8
+            Height = 15
+            Top = 76
+            Width = 52
+            Caption = 'Item Text:'
+            ParentColor = False
+          end
+          object CmbDoMenuItmType: TComboBox
+            Left = 112
+            Height = 23
+            Top = 104
+            Width = 136
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Sub Menu'
+              'Menu Action'
+              'Dynamic Sub Menu'
+            )
+            Style = csDropDownList
+            TabOrder = 1
+            Text = 'Sub Menu'
+          end
+          object Label8: TLabel
+            Left = 8
+            Height = 15
+            Top = 108
+            Width = 56
+            Caption = 'Item Type:'
+            ParentColor = False
+          end
+        end
+      end
+    end
+    object PgDoIcons: TPage
+      object Label17: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 8
+        Caption = 'DoIcons Details:'
+        ParentColor = False
+      end
+      object Panel8: TPanel
+        Left = 0
+        Height = 49
+        Top = 23
+        Width = 499
+        Align = alTop
+        BorderSpacing.Bottom = 4
+        BevelOuter = bvNone
+        ClientHeight = 49
+        ClientWidth = 499
+        TabOrder = 0
+        object Label18: TLabel
+          Left = 0
+          Height = 15
+          Top = 0
+          Width = 50
+          Caption = 'Identifier:'
+          ParentColor = False
+        end
+        object LblDoIconsIdent: TLabel
+          Left = 72
+          Height = 15
+          Top = 0
+          Width = 86
+          Caption = 'LblDoIconsIdent'
+          ParentColor = False
+        end
+        object ToolBar3: TToolBar
+          Left = 0
+          Height = 24
+          Top = 25
+          Width = 499
+          Align = alBottom
+          AutoSize = True
+          Caption = 'ToolBar1'
+          Images = GEOSDesignerMainDMod.ImgLstItems
+          TabOrder = 0
+          object ToolButton3: TToolButton
+            Left = 1
+            Top = 2
+            Caption = 'ToolButton1'
+            ImageIndex = 0
+          end
+          object TlBtnIconDelete: TToolButton
+            Left = 24
+            Top = 2
+            Caption = 'TlBtnGrphDelete'
+            ImageIndex = 1
+          end
+        end
+      end
+      object LstBxDoIcons: TListBox
+        Left = 0
+        Height = 480
+        Top = 76
+        Width = 160
+        Align = alLeft
+        ItemHeight = 0
+        TabOrder = 1
+      end
+      object Splitter3: TSplitter
+        Left = 160
+        Height = 480
+        Top = 76
+        Width = 6
+      end
+      object Panel9: TPanel
+        Left = 166
+        Height = 480
+        Top = 76
+        Width = 333
+        Align = alClient
+        BevelOuter = bvNone
+        ClientHeight = 480
+        ClientWidth = 333
+        TabOrder = 3
+        object DividerBevel3: TDividerBevel
+          Left = 0
+          Height = 15
+          Top = 0
+          Width = 333
+          Caption = 'DoIcons Settings'
+          Align = alTop
+          BorderSpacing.Bottom = 8
+          LeftIndent = 0
+          ParentFont = False
+        end
+        object Panel10: TPanel
+          Left = 0
+          Height = 105
+          Top = 23
+          Width = 333
+          Align = alTop
+          BevelOuter = bvNone
+          ClientHeight = 105
+          ClientWidth = 333
+          TabOrder = 0
+          object Label19: TLabel
+            Left = 8
+            Height = 15
+            Top = 4
+            Width = 61
+            Caption = 'Mouse Pos.'
+            ParentColor = False
+          end
+          object Label20: TLabel
+            Left = 88
+            Height = 15
+            Top = 4
+            Width = 10
+            Caption = 'X:'
+            ParentColor = False
+          end
+          object Label21: TLabel
+            Left = 88
+            Height = 15
+            Top = 36
+            Width = 10
+            Caption = 'Y:'
+            ParentColor = False
+          end
+          object SpEdtDoIconsXPos: TSpinEdit
+            Left = 116
+            Height = 23
+            Top = 0
+            Width = 92
+            MaxValue = 319
+            TabOrder = 0
+          end
+          object SpEdtDoIconsYPos: TSpinEdit
+            Left = 116
+            Height = 23
+            Top = 32
+            Width = 92
+            MaxValue = 199
+            TabOrder = 1
+          end
+          object Label23: TLabel
+            Left = 8
+            Height = 15
+            Top = 72
+            Width = 71
+            Caption = 'Show Mouse:'
+            ParentColor = False
+          end
+          object CheckBox1: TCheckBox
+            Left = 116
+            Height = 19
+            Top = 70
+            Width = 20
+            TabOrder = 2
+          end
+        end
+        object Panel11: TPanel
+          Left = 0
+          Height = 352
+          Top = 128
+          Width = 333
+          Align = alClient
+          BevelOuter = bvNone
+          ClientHeight = 352
+          ClientWidth = 333
+          TabOrder = 1
+          object DividerBevel4: TDividerBevel
+            Left = 0
+            Height = 15
+            Top = 8
+            Width = 333
+            Caption = 'Icon Item Settings'
+            Align = alTop
+            BorderSpacing.Top = 8
+            LeftIndent = 0
+            ParentFont = False
+          end
+          object Label22: TLabel
+            Left = 8
+            Height = 15
+            Top = 40
+            Width = 76
+            Caption = 'Icon Identifier:'
+            ParentColor = False
+          end
+          object LblDoIconItmIdent: TLabel
+            Left = 116
+            Height = 15
+            Top = 40
+            Width = 99
+            Caption = 'LblDoIconItmIdent'
+            ParentColor = False
+          end
+          object Label24: TLabel
+            Left = 8
+            Height = 15
+            Top = 108
+            Width = 48
+            Caption = 'Icon Pos.'
+            ParentColor = False
+          end
+          object Label25: TLabel
+            Left = 88
+            Height = 15
+            Top = 108
+            Width = 10
+            Caption = 'X:'
+            ParentColor = False
+          end
+          object Label26: TLabel
+            Left = 88
+            Height = 15
+            Top = 140
+            Width = 10
+            Caption = 'Y:'
+            ParentColor = False
+          end
+          object SpEdtDoIconsItmXPos: TSpinEdit
+            Left = 116
+            Height = 23
+            Top = 104
+            Width = 92
+            MaxValue = 40
+            TabOrder = 0
+          end
+          object SpEdtDoIconsItmYPos: TSpinEdit
+            Left = 116
+            Height = 23
+            Top = 136
+            Width = 92
+            MaxValue = 199
+            TabOrder = 1
+          end
+          object Label27: TLabel
+            Left = 8
+            Height = 15
+            Top = 76
+            Width = 26
+            Caption = 'Icon:'
+            ParentColor = False
+          end
+          object CmbDoIconsIcon: TComboBox
+            Left = 116
+            Height = 23
+            Top = 72
+            Width = 172
+            ItemHeight = 15
+            Style = csDropDownList
+            TabOrder = 2
+          end
+          object Label28: TLabel
+            Left = 224
+            Height = 15
+            Top = 108
+            Width = 44
+            Caption = '(in cells)'
+            ParentColor = False
+          end
+        end
+      end
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Height = 24
+    Top = 0
+    Width = 673
+    Align = alTop
+    BorderSpacing.Bottom = 4
+    BevelOuter = bvNone
+    TabOrder = 3
+    Visible = False
+  end
+end

@@ -1,0 +1,102 @@
+object GEOSDesignerIconEditForm: TGEOSDesignerIconEditForm
+  Left = 751
+  Height = 365
+  Top = 326
+  Width = 668
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSizeToolWin
+  Caption = 'Icon Editor'
+  ClientHeight = 365
+  ClientWidth = 668
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnShow = FormShow
+  Position = poDefaultPosOnly
+  LCLVersion = '1.6.0.4'
+  object Panel1: TPanel
+    Left = 0
+    Height = 40
+    Top = 0
+    Width = 668
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 668
+    TabOrder = 0
+    object ToolBar1: TToolBar
+      Left = 0
+      Height = 24
+      Top = 16
+      Width = 668
+      Align = alBottom
+      AutoSize = True
+      Caption = 'ToolBar1'
+      Images = GEOSDesignerMainDMod.ImgLstItems
+      TabOrder = 0
+      object TlBtnIconAdd: TToolButton
+        Left = 1
+        Top = 2
+        Caption = 'ToolButton1'
+        ImageIndex = 0
+        OnClick = TlBtnIconAddClick
+      end
+      object ToolButton1: TToolButton
+        Left = 24
+        Top = 2
+        Caption = 'TlBtnGrphDelete'
+        ImageIndex = 1
+      end
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Height = 325
+    Top = 40
+    Width = 170
+    Align = alLeft
+    BevelOuter = bvNone
+    ClientHeight = 325
+    ClientWidth = 170
+    TabOrder = 1
+    object LstBxIcons: TListBox
+      Left = 8
+      Height = 317
+      Top = 0
+      Width = 158
+      Align = alClient
+      BorderSpacing.Left = 8
+      BorderSpacing.Right = 4
+      BorderSpacing.Bottom = 8
+      ItemHeight = 0
+      OnSelectionChange = LstBxIconsSelectionChange
+      TabOrder = 0
+    end
+  end
+  object DrwGrdIcon: TDrawGrid
+    Left = 174
+    Height = 317
+    Top = 40
+    Width = 486
+    Align = alClient
+    BorderSpacing.Left = 4
+    BorderSpacing.Right = 8
+    BorderSpacing.Bottom = 8
+    ColCount = 48
+    DefaultColWidth = 10
+    DefaultRowHeight = 10
+    ExtendedSelect = False
+    FixedCols = 0
+    FixedRows = 0
+    RowCount = 16
+    TabOrder = 2
+    UseXORFeatures = True
+    OnDrawCell = DrwGrdIconDrawCell
+  end
+  object OpenPictureDialog1: TOpenPictureDialog
+    Title = 'Import image'
+    Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
+    left = 256
+    top = 8
+  end
+end
