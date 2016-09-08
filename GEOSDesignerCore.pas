@@ -36,6 +36,9 @@ interface
 uses
     Graphics, Contnrs, Classes, SysUtils, GEOSTypes, Laz2_DOM;
 
+const
+    SET_CHR_GEOSDSGNIDENT: TSysCharSet = ['a'..'z', 'A'..'Z', '0'..'9', '_'];
+
 type
     TGEOSDesignerOnInit = procedure of object;
     TGEOSDesignerOnChange = procedure of object;
@@ -74,6 +77,8 @@ type
         property  Active: Boolean read FActive write SetActive;
         property  Identifier: string read FIdentifier;
     end;
+
+    TGEOSDesignerElementClass = class of TGEOSDesignerElement;
 
     { TGEOSDesignerIcon }
 
@@ -177,10 +182,13 @@ type
     TGEOSGraphicsStrElement = class(TGEOSDesignerElement)
     private
         FItems: TList;
-        FMode: TGEOSGraphicsInstrType;
 
         function  GetCount: Integer;
         function  GetItems(const AIndex: Integer): PGEOSGraphicsInstr;
+
+    protected
+        FMode: TGEOSGraphicsInstrType;
+        FDefaultMode: TGEOSGraphicsInstrType;
 
     public
         constructor Create(const AIdent: string); override;
@@ -204,6 +212,15 @@ type
         property  Items[const AIndex: Integer]: PGEOSGraphicsInstr
                 read GetItems; default;
         property  Mode: TGEOSGraphicsInstrType read FMode;
+    end;
+
+{ TGEOSPutStringElement }
+
+    TGEOSPutStringElement = class(TGEOSGraphicsStrElement)
+    public
+        constructor Create(const AIdent: string); override;
+
+        class function ElementName: string; override;
     end;
 
 
@@ -336,8 +353,11 @@ type
 
         function  GetCount: Integer;
         function  GetIcons(const AIndex: Integer): TGEOSDesignerIcon;
+        procedure SetIcons(const AIndex: Integer; const AIcon: TGEOSDesignerIcon);
         function  GetIconsXPos(const AIndex: Integer): Word;
+        procedure SetIconsXPos(const AIndex: Integer; const AValue: Word);
         function  GetIconsYPos(const AIndex: Integer): Word;
+        procedure SetIconsYPos(const AIndex: Integer; const AValue: Word);
         function  GetIconsIdent(const AIndex: Integer): string;
 
     public
@@ -363,9 +383,11 @@ type
         property  YPos: Word read FYPos write SetYPos;
         property  Count: Integer read GetCount;
         property  Icons[const AIndex: Integer]: TGEOSDesignerIcon
-                read GetIcons; default;
-        property  IconsXPos[const AIndex: Integer]: Word read GetIconsXPos;
-        property  IconsYPos[const AIndex: Integer]: Word read GetIconsYPos;
+                read GetIcons write SetIcons; default;
+        property  IconsXPos[const AIndex: Integer]: Word read GetIconsXPos
+                write SetIconsXPos;
+        property  IconsYPos[const AIndex: Integer]: Word read GetIconsYPos
+                write SetIconsYPos;
         property  IconsIdent[const AIndex: Integer]: string read GetIconsIdent;
     end;
 
@@ -389,6 +411,7 @@ uses
 
 const
     LIT_CAP_GEOSELEMGRPHSTR = 'GraphicsString';
+    LIT_CAP_GEOSELEMPUTSTRG = 'PutString';
     LIT_CAP_GEOSELEMENTMENU = 'DoMenu';
     LIT_CAP_GEOSELEMENTICON = 'DoIcons';
 
@@ -400,6 +423,7 @@ var
 procedure RegisterElements;
     begin
     GEOSDesignerElements.Add(TGEOSGraphicsStrElement);
+    GEOSDesignerElements.Add(TGEOSPutStringElement);
     GEOSDesignerElements.Add(TGEOSDoMenuElement);
     GEOSDesignerElements.Add(TGEOSDoIconsElement);
     end;
@@ -482,6 +506,21 @@ procedure SetGEOSShowMouse(const AValue: TGEOSDoIconsElement);
         end;
     end;
 
+{ TGEOSPutStringElement }
+
+constructor TGEOSPutStringElement.Create(const AIdent: string);
+    begin
+    inherited Create(AIdent);
+
+    FDefaultMode:= ggiString;
+    FMode:= ggiString;
+    end;
+
+class function TGEOSPutStringElement.ElementName: string;
+    begin
+    Result:= LIT_CAP_GEOSELEMPUTSTRG;
+    end;
+
 
 { TGEOSDoIconsElement }
 
@@ -527,14 +566,44 @@ function TGEOSDoIconsElement.GetIcons(
     Result:= PGEOSIconDetails(FDetails[AIndex])^.Icon;
     end;
 
+procedure TGEOSDoIconsElement.SetIcons(const AIndex: Integer;
+        const AIcon: TGEOSDesignerIcon);
+    begin
+    if  PGEOSIconDetails(FDetails[AIndex])^.Icon <> AIcon then
+        begin
+        PGEOSIconDetails(FDetails[AIndex])^.Icon:= AIcon;
+        DoChanged;
+        end;
+    end;
+
 function TGEOSDoIconsElement.GetIconsXPos(const AIndex: Integer): Word;
     begin
     Result:= PGEOSIconDetails(FDetails[AIndex])^.X;
     end;
 
+procedure TGEOSDoIconsElement.SetIconsXPos(const AIndex: Integer;
+        const AValue: Word);
+    begin
+    if  PGEOSIconDetails(FDetails[AIndex])^.X <> AValue then
+        begin
+        PGEOSIconDetails(FDetails[AIndex])^.X:= AValue;
+        DoChanged;
+        end;
+    end;
+
 function TGEOSDoIconsElement.GetIconsYPos(const AIndex: Integer): Word;
     begin
     Result:= PGEOSIconDetails(FDetails[AIndex])^.Y;
+    end;
+
+procedure TGEOSDoIconsElement.SetIconsYPos(const AIndex: Integer;
+        const AValue: Word);
+    begin
+    if  PGEOSIconDetails(FDetails[AIndex])^.Y <> AValue then
+        begin
+        PGEOSIconDetails(FDetails[AIndex])^.Y:= AValue;
+        DoChanged;
+        end;
     end;
 
 function TGEOSDoIconsElement.GetIconsIdent(const AIndex: Integer): string;
@@ -1116,6 +1185,7 @@ constructor TGEOSGraphicsStrElement.Create(const AIdent: string);
     begin
     inherited Create(AIdent);
 
+    FDefaultMode:= ggiGraphics;
     FMode:= ggiGraphics;
     FItems:= TList.Create;
     end;
@@ -1150,7 +1220,9 @@ procedure TGEOSGraphicsStrElement.AddItem(const AType: TGEOSGraphicsInstrType;
     and not (ACmd in [1..3,5..7]) then
         raise Exception.Create('Invalid command for instruction type.');
 
-//todo TGEOSGraphicsStrElement.AddItem check for valid cmds in type ggiString
+    if  (AType = ggiString)
+    and not (ACmd in [8..27, 127, 128, 255]) then
+        raise Exception.Create('Invalid command for instruction type.');
 
     if  (FMode = ggiGraphics)
     and (ACmd = VAL_CMD_GEOSGSTR_ESCPTS) then
@@ -1203,7 +1275,7 @@ procedure TGEOSGraphicsStrElement.DeleteItem(const AIndex: Integer);
         else
             FMode:= ggiGraphics
     else
-        FMode:= ggiGraphics;
+        FMode:= FDefaultMode;
 
     DoChanged;
     end;

@@ -47,13 +47,13 @@ object GEOSDesignerMainDMod: TGEOSDesignerMainDMod
     end
     object ActEditAddElem: TAction
       Category = 'Edit'
-      Caption = 'ActEditAddElem'
+      Caption = 'Add Element...'
       ImageIndex = 0
       OnExecute = ActEditAddElemExecute
     end
     object ActEditDelElem: TAction
       Category = 'Edit'
-      Caption = 'ActEditDelElem'
+      Caption = 'Delete Element'
       ImageIndex = 1
       OnExecute = ActEditDelElemExecute
     end

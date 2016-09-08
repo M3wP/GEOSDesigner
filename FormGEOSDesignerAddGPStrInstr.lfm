@@ -1,0 +1,342 @@
+object GEOSDesignerAddGPStrInstrForm: TGEOSDesignerAddGPStrInstrForm
+  Left = 629
+  Height = 225
+  Top = 357
+  Width = 352
+  ActiveControl = CmbCommand
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'GraphicsString/PutString Instruction...'
+  ClientHeight = 225
+  ClientWidth = 352
+  OnClose = FormClose
+  Position = poMainFormCenter
+  LCLVersion = '1.6.0.4'
+  object Label1: TLabel
+    Left = 8
+    Height = 15
+    Top = 12
+    Width = 29
+    Caption = 'Type:'
+    ParentColor = False
+  end
+  object CmbExType: TComboBoxEx
+    Left = 96
+    Height = 24
+    Top = 8
+    Width = 248
+    Enabled = False
+    Images = GEOSDesignerMainDMod.ImgLstGrphsStr
+    ItemHeight = 18
+    ItemsEx = <    
+      item
+        Caption = 'GraphicsString'
+        ImageIndex = 0
+      end    
+      item
+        Caption = 'PutString'
+        ImageIndex = 1
+      end>
+    ItemIndex = 0
+    ReadOnly = True
+    TabOrder = 0
+  end
+  object NtBkData: TNotebook
+    Left = 0
+    Height = 64
+    Top = 112
+    Width = 352
+    PageIndex = 0
+    OnEnter = NtBkDataEnter
+    TabOrder = 2
+    TabStop = True
+    object PgDataXY: TPage
+      object SpEdtXYXPos: TSpinEdit
+        Left = 96
+        Height = 23
+        Top = 0
+        Width = 90
+        MaxValue = 319
+        TabOrder = 0
+      end
+      object SpEdtXYYPos: TSpinEdit
+        Left = 96
+        Height = 23
+        Top = 31
+        Width = 90
+        MaxValue = 199
+        TabOrder = 1
+      end
+      object Label3: TLabel
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 10
+        Caption = 'X:'
+        ParentColor = False
+      end
+      object Label4: TLabel
+        Left = 16
+        Height = 15
+        Top = 35
+        Width = 10
+        Caption = 'Y:'
+        ParentColor = False
+      end
+    end
+    object PgDataPattern: TPage
+      object CmbExPattern: TComboBoxEx
+        Left = 96
+        Height = 24
+        Top = 0
+        Width = 160
+        Images = GEOSDesignerMainDMod.ImgLstPatterns
+        ItemHeight = 18
+        ItemsEx = <        
+          item
+            Caption = 'Pattern 0'
+            ImageIndex = 0
+          end        
+          item
+            Caption = 'Pattern 1'
+            ImageIndex = 1
+          end        
+          item
+            Caption = 'Pattern 2'
+            ImageIndex = 2
+          end        
+          item
+            Caption = 'Pattern 3'
+            ImageIndex = 3
+          end        
+          item
+            Caption = 'Pattern 4'
+            ImageIndex = 4
+          end        
+          item
+            Caption = 'Pattern 5'
+            ImageIndex = 5
+          end        
+          item
+            Caption = 'Pattern 6'
+            ImageIndex = 6
+          end        
+          item
+            Caption = 'Pattern 7'
+            ImageIndex = 7
+          end        
+          item
+            Caption = 'Pattern 8'
+            ImageIndex = 8
+          end        
+          item
+            Caption = 'Pattern 9'
+            ImageIndex = 9
+          end        
+          item
+            Caption = 'Pattern 10'
+            ImageIndex = 10
+          end        
+          item
+            Caption = 'Pattern 11'
+            ImageIndex = 11
+          end        
+          item
+            Caption = 'Pattern 12'
+            ImageIndex = 12
+          end        
+          item
+            Caption = 'Pattern 13'
+            ImageIndex = 13
+          end        
+          item
+            Caption = 'Pattern 14'
+            ImageIndex = 14
+          end        
+          item
+            Caption = 'Pattern 15'
+            ImageIndex = 15
+          end        
+          item
+            Caption = 'Pattern 16'
+            ImageIndex = 16
+          end        
+          item
+            Caption = 'Pattern 17'
+            ImageIndex = 17
+          end        
+          item
+            Caption = 'Pattern 18'
+            ImageIndex = 18
+          end        
+          item
+            Caption = 'Pattern 19'
+            ImageIndex = 19
+          end        
+          item
+            Caption = 'Pattern 20'
+            ImageIndex = 20
+          end        
+          item
+            Caption = 'Pattern 21'
+            ImageIndex = 21
+          end        
+          item
+            Caption = 'Pattern 22'
+            ImageIndex = 22
+          end        
+          item
+            Caption = 'Pattern 23'
+            ImageIndex = 23
+          end        
+          item
+            Caption = 'Pattern 24'
+            ImageIndex = 24
+          end        
+          item
+            Caption = 'Pattern 25'
+            ImageIndex = 25
+          end        
+          item
+            Caption = 'Pattern 26'
+            ImageIndex = 26
+          end        
+          item
+            Caption = 'Pattern 27'
+            ImageIndex = 27
+          end        
+          item
+            Caption = 'Pattern 28'
+            ImageIndex = 28
+          end        
+          item
+            Caption = 'Pattern 29'
+            ImageIndex = 29
+          end        
+          item
+            Caption = 'Pattern 30'
+            ImageIndex = 30
+          end        
+          item
+            Caption = 'Pattern 31'
+            ImageIndex = 31
+          end>
+        ReadOnly = True
+        TabOrder = 0
+      end
+      object Label8: TLabel
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 41
+        Caption = 'Pattern:'
+        ParentColor = False
+      end
+    end
+    object PgDataX: TPage
+      object SpEdtXXPos: TSpinEdit
+        Left = 96
+        Height = 23
+        Top = 0
+        Width = 90
+        TabOrder = 0
+      end
+      object Label6: TLabel
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 10
+        Caption = 'X:'
+        ParentColor = False
+      end
+    end
+    object PgDataString: TPage
+      object Label9: TLabel
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 34
+        Caption = 'String:'
+        ParentColor = False
+      end
+      object EdtString: TEdit
+        Left = 96
+        Height = 23
+        Top = 0
+        Width = 248
+        TabOrder = 0
+      end
+    end
+    object PgDataY: TPage
+      object SpEdtYYPos: TSpinEdit
+        Left = 96
+        Height = 23
+        Top = 0
+        Width = 90
+        TabOrder = 0
+      end
+      object Label7: TLabel
+        Left = 16
+        Height = 15
+        Top = 4
+        Width = 10
+        Caption = 'Y:'
+        ParentColor = False
+      end
+    end
+  end
+  object CmbCommand: TComboBox
+    Left = 96
+    Height = 23
+    Top = 48
+    Width = 184
+    ItemHeight = 15
+    OnChange = CmbCommandChange
+    Style = csDropDownList
+    TabOrder = 1
+  end
+  object Label2: TLabel
+    Left = 8
+    Height = 15
+    Top = 52
+    Width = 60
+    Caption = 'Command:'
+    ParentColor = False
+  end
+  object Label5: TLabel
+    Left = 8
+    Height = 15
+    Top = 84
+    Width = 27
+    Caption = 'Data:'
+    ParentColor = False
+  end
+  object BtnOK: TButton
+    Left = 184
+    Height = 25
+    Top = 192
+    Width = 75
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 3
+  end
+  object BtnCancel: TButton
+    Left = 269
+    Height = 25
+    Top = 192
+    Width = 75
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 4
+  end
+  object LblDataNone: TLabel
+    Left = 96
+    Height = 15
+    Top = 84
+    Width = 32
+    Caption = 'None.'
+    ParentColor = False
+  end
+end

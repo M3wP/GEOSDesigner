@@ -9,7 +9,8 @@ uses
     Interfaces, // this includes the LCL widgetset
     Forms, lazcontrols, FormGEOSDesignerMain, DModGEOSDesignerMain,
     FrameGEOSDesignerMain, FormGEOSDesignerPreview, GEOSDesignerCore,
-    GEOSGraphics, FormGEOSDesignerNew, FormGEOSDesignerIconEdit
+    GEOSGraphics, FormGEOSDesignerNew, FormGEOSDesignerIconEdit, 
+FormGEOSDesignerAddElem, FormGEOSDesignerAddGPStrInstr
     { you can add units after this };
 
 {$R *.res}
@@ -22,6 +23,9 @@ begin
     Application.CreateForm(TGEOSDesignerPreviewForm, GEOSDesignerPreviewForm);
     Application.CreateForm(TGEOSDesignerNewForm, GEOSDesignerNewForm);
     Application.CreateForm(TGEOSDesignerIconEditForm, GEOSDesignerIconEditForm);
+    Application.CreateForm(TGEOSDesignerAddElemForm, GEOSDesignerAddElemForm);
+    Application.CreateForm(TGEOSDesignerAddGPStrInstrForm, 
+        GEOSDesignerAddGPStrInstrForm);
     Application.Run;
 end.
 

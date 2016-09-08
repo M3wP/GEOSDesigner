@@ -42,7 +42,7 @@ type
 { TGEOSDesignerMainFrame }
 
     TGEOSDesignerMainFrame = class(TFrame)
-        CheckBox1: TCheckBox;
+        ChkBxDoIconsShowMouse: TCheckBox;
         ChkBxDoMenuItmCnstrnd: TCheckBox;
         ChkBxDoMenuItmVisible: TCheckBox;
         ChkLstBxElements: TCheckListBox;
@@ -120,24 +120,37 @@ type
         ToolBar1: TToolBar;
         ToolBar2: TToolBar;
         ToolBar3: TToolBar;
-        ToolButton1: TToolButton;
+        TlBtnGrphAdd: TToolButton;
         TlBtnGrphDelete: TToolButton;
         TlBtnGrphEdit: TToolButton;
         ToolButton2: TToolButton;
         ToolButton3: TToolButton;
         TreeVwDoMenu: TTreeView;
+        procedure ChkBxDoIconsShowMouseChange(Sender: TObject);
         procedure ChkLstBxElementsClick(Sender: TObject);
         procedure ChkLstBxElementsClickCheck(Sender: TObject);
         procedure ChkLstBxElementsItemClick(Sender: TObject; Index: integer);
+        procedure CmbDoIconsIconChange(Sender: TObject);
+        procedure LstBxDoIconsSelectionChange(Sender: TObject; User: boolean);
         procedure LstVwGrphStrItemsResize(Sender: TObject);
         procedure LstVwGrphStrItemsSelectItem(Sender: TObject; Item: TListItem;
                 Selected: Boolean);
+        procedure SpEdtDoIconsItmXPosChange(Sender: TObject);
+        procedure SpEdtDoIconsItmYPosChange(Sender: TObject);
+        procedure SpEdtDoIconsXPosChange(Sender: TObject);
+        procedure SpEdtDoIconsYPosChange(Sender: TObject);
+        procedure TlBtnGrphAddClick(Sender: TObject);
         procedure TlBtnGrphDeleteClick(Sender: TObject);
+        procedure TlBtnGrphEditClick(Sender: TObject);
         procedure TreeVwDoMenuSelectionChanged(Sender: TObject);
     private
+        FChanging: Boolean;
         FSelectedElem: TGEOSDesignerElement;
+        FSelectedItem: Integer;
 
         procedure ClearDisplay;
+
+        procedure DoDoIconsItemSelect(const AItem: Integer);
 
         procedure DoInitGrphStrElemView;
         procedure DoInitDoMenuElemView;
@@ -148,6 +161,7 @@ type
 
     public
         procedure InitialiseDisplay;
+        procedure RedisplayActiveElement;
 
         property  SelectedElem: TGEOSDesignerElement read FSelectedElem;
     end;
@@ -157,7 +171,7 @@ implementation
 {$R *.lfm}
 
 uses
-    DModGEOSDesignerMain;
+    DModGEOSDesignerMain, FormGEOSDesignerAddGPStrInstr;
 
 
 { TGEOSDesignerMainFrame }
@@ -169,6 +183,39 @@ procedure TGEOSDesignerMainFrame.ChkLstBxElementsItemClick(Sender: TObject;
 //      clicking on an item's check box which is no good to me because I can
 //      detect that in OnClickCheck.
 //  DoFindActiveElement;
+    end;
+
+procedure TGEOSDesignerMainFrame.CmbDoIconsIconChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+
+        e.Icons[FSelectedItem]:=
+                GEOSDesignerMainDMod.Icons[CmbDoIconsIcon.ItemIndex];
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.LstBxDoIconsSelectionChange(Sender: TObject;
+        User: boolean);
+    var
+    s,
+    i: Integer;
+
+    begin
+    s:= -1;
+    for i:= 0 to LstBxDoIcons.Count - 1 do
+        if  LstBxDoIcons.Selected[i] then
+            begin
+            s:= i;
+            Break;
+            end;
+
+    if  s > -1 then
+        DoDoIconsItemSelect(s);
     end;
 
 procedure TGEOSDesignerMainFrame.LstVwGrphStrItemsResize(Sender: TObject);
@@ -190,6 +237,10 @@ procedure TGEOSDesignerMainFrame.LstVwGrphStrItemsResize(Sender: TObject);
 
 procedure TGEOSDesignerMainFrame.LstVwGrphStrItemsSelectItem(Sender: TObject;
         Item: TListItem; Selected: Boolean);
+    var
+    e: TGEOSGraphicsStrElement;
+    itm: PGEOSGraphicsInstr;
+
     begin
     if  Selected
     and (Item.Index = (LstVwGrphStrItems.Items.Count - 1)) then
@@ -197,7 +248,82 @@ procedure TGEOSDesignerMainFrame.LstVwGrphStrItemsSelectItem(Sender: TObject;
     else
         TlBtnGrphDelete.Enabled:= False;
 
-    TlBtnGrphEdit.Enabled:= Selected;
+    if  Selected then
+        begin
+        e:= FSelectedElem as TGEOSGraphicsStrElement;
+        itm:= e[Item.Index];
+
+        TlBtnGrphEdit.Enabled:= ((itm^.InstrType = ggiGraphics) and
+             (itm^.InstrCmd <> VAL_CMD_GEOSGSTR_ESCPTS)) or
+            ((itm^.InstrType = ggiString) and
+             (itm^.InstrCmd <> VAL_CMD_GEOSPSTR_ESCGRP));
+        end
+    else
+        TlBtnGrphEdit.Enabled:= False;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoIconsItmXPosChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.IconsXPos[FSelectedItem]:= SpEdtDoIconsItmXPos.Value;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoIconsItmYPosChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.IconsYPos[FSelectedItem]:= SpEdtDoIconsItmYPos.Value;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoIconsXPosChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.XPos:= SpEdtDoIconsXPos.Value;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoIconsYPosChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.YPos:= SpEdtDoIconsYPos.Value;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnGrphAddClick(Sender: TObject);
+    var
+    e: TGEOSGraphicsStrElement;
+    itm: TGEOSGraphicsInstr;
+
+    begin
+    e:= FSelectedElem as TGEOSGraphicsStrElement;
+
+    if  GEOSDesignerAddGPStrInstrForm.ShowAdd(e.Mode, itm) = mrOk then
+        begin
+        e.AddItem(itm.InstrType, itm.InstrCmd, itm.InstrData);
+        DoInitGrphStrElemView;
+        GEOSDesignerMainDMod.Changed;
+        end;
     end;
 
 procedure TGEOSDesignerMainFrame.TlBtnGrphDeleteClick(Sender: TObject);
@@ -209,6 +335,22 @@ procedure TGEOSDesignerMainFrame.TlBtnGrphDeleteClick(Sender: TObject);
 
     e.DeleteItem(LstVwGrphStrItems.Items.Count - 1);
     LstVwGrphStrItems.Items.Delete(LstVwGrphStrItems.Items.Count - 1);
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnGrphEditClick(Sender: TObject);
+    var
+    e: TGEOSGraphicsStrElement;
+    i: Integer;
+
+    begin
+    e:= FSelectedElem as TGEOSGraphicsStrElement;
+    i:= LstVwGrphStrItems.Selected.Index;
+
+    if  GEOSDesignerAddGPStrInstrForm.ShowEdit(e[i]) = mrOk then
+        begin
+        DoInitGrphStrElemView;
+        GEOSDesignerMainDMod.Changed;
+        end;
     end;
 
 procedure TGEOSDesignerMainFrame.TreeVwDoMenuSelectionChanged(Sender: TObject);
@@ -259,10 +401,43 @@ procedure TGEOSDesignerMainFrame.ChkLstBxElementsClick(Sender: TObject);
     DoFindActiveElement;
     end;
 
+procedure TGEOSDesignerMainFrame.ChkBxDoIconsShowMouseChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.ShowMouse:= ChkBxDoIconsShowMouse.Checked;
+        end;
+    end;
+
 procedure TGEOSDesignerMainFrame.ClearDisplay;
     begin
     ChkLstBxElements.Items.Clear;
     FSelectedElem:= nil;
+    end;
+
+procedure TGEOSDesignerMainFrame.DoDoIconsItemSelect(const AItem: Integer);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    e:= FSelectedElem as TGEOSDoIconsElement;
+
+    FSelectedItem:= AItem;
+
+    FChanging:= True;
+    try
+        LblDoIconItmIdent.Caption:= e.IconsIdent[AItem];
+        CmbDoIconsIcon.ItemIndex:= CmbDoIconsIcon.Items.IndexOf(e[AItem].Indentifier);
+        SpEdtDoIconsItmXPos.Value:= e.IconsXPos[AItem];
+        SpEdtDoIconsItmYPos.Value:= e.IconsYPos[AItem];
+
+        finally
+        FChanging:= False;
+        end;
     end;
 
 procedure TGEOSDesignerMainFrame.DoInitGrphStrElemView;
@@ -307,6 +482,14 @@ procedure TGEOSDesignerMainFrame.DoInitGrphStrElemView;
             end;
         finally
         LstVwGrphStrItems.Items.EndUpdate;
+        end;
+
+    if  LstVwGrphStrItems.Items.Count > 0 then
+        LstVwGrphStrItems.Selected:= LstVwGrphStrItems.Items[0]
+    else
+        begin
+        TlBtnGrphEdit.Enabled:= False;
+        TlBtnGrphDelete.Enabled:= False;
         end;
     end;
 
@@ -360,8 +543,54 @@ procedure TGEOSDesignerMainFrame.DoInitDoMenuElemView;
     end;
 
 procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
-    begin
+    var
+    e: TGEOSDoIconsElement;
+    i: Integer;
 
+    begin
+    e:= FSelectedElem as TGEOSDoIconsElement;
+
+    FChanging:= True;
+    try
+        LblDoIconsIdent.Caption:= e.Identifier;
+        LstBxDoIcons.Items.BeginUpdate;
+        try
+            LstBxDoIcons.Clear;
+
+            for i:= 0 to e.Count - 1 do
+                LstBxDoIcons.Items.Add(e.IconsIdent[i]);
+
+            finally
+            LstBxDoIcons.Items.EndUpdate;
+            end;
+
+        SpEdtDoIconsXPos.Value:= e.XPos;
+        SpEdtDoIconsYPos.Value:= e.YPos;
+
+        ChkBxDoIconsShowMouse.Checked:= e.ShowMouse;
+
+        CmbDoIconsIcon.Items.BeginUpdate;
+        try
+            CmbDoIconsIcon.Clear;
+
+            for i:= 0 to GEOSDesignerMainDMod.IconsCount - 1 do
+                CmbDoIconsIcon.Items.Add(GEOSDesignerMainDMod.Icons[i].Indentifier);
+
+            finally
+            CmbDoIconsIcon.Items.EndUpdate;
+            end;
+
+        CmbDoIconsIcon.ItemIndex:= -1;
+
+        finally
+        FChanging:= False;
+        end;
+
+    if  LstBxDoIcons.Items.Count > 0 then
+        begin
+        LstBxDoIcons.Selected[0]:= True;
+        DoDoIconsItemSelect(0);
+        end;
     end;
 
 procedure TGEOSDesignerMainFrame.DoFindActiveElement;
@@ -415,7 +644,7 @@ procedure TGEOSDesignerMainFrame.InitialiseDisplay;
             begin
             e:= GEOSDesignerMainDMod.Elements[i];
 
-            ChkLstBxElements.Items.Add(e.ElementName);
+            ChkLstBxElements.Items.Add(e.Identifier + ' (' + e.ElementName + ')');
             ChkLstBxElements.Checked[ChkLstBxElements.Items.Count - 1]:=
                     e.Active;
             end;
@@ -429,6 +658,15 @@ procedure TGEOSDesignerMainFrame.InitialiseDisplay;
         ChkLstBxElements.Selected[0]:= True;
         DoFindActiveElement;
         end
+    else
+        NtBkDetails.PageIndex:= -1;
+    end;
+
+procedure TGEOSDesignerMainFrame.RedisplayActiveElement;
+    begin
+    FSelectedElem:= nil;
+    if  ChkLstBxElements.Items.Count > 0 then
+        DoFindActiveElement
     else
         NtBkDetails.PageIndex:= -1;
     end;

@@ -60,7 +60,8 @@ procedure GEOSCompactBitmap(const ADataIn, ADataOut: TStream);
 
 procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
 procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
-        const ABitmap: TGEOSBitmap; const ATransparent: Boolean = False);
+        const ABitmap: TGEOSBitmap; const ATransparent: Boolean = False;
+        const AXIsPixels: Boolean = False);
 
 var
     GEOSCurrPattrn: Byte = 0;
@@ -166,7 +167,7 @@ procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
     end;
 
 procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
-        const ABitmap: TGEOSBitmap; const ATransparent: Boolean);
+        const ABitmap: TGEOSBitmap; const ATransparent, AXIsPixels: Boolean);
     var
     xp: Word;
     i,
@@ -178,7 +179,11 @@ procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
     bc: TColor;
 
     begin
-    xp:= AXPos * 8;
+    if  AXIsPixels then
+        xp:= AXPos
+    else
+        xp:= AXPos * 8;
+
     m:= TMemoryStream.Create;
     try
         ABitmap.Data.Position:= 0;

@@ -91,7 +91,10 @@ type
         procedure OnMainShow;
         procedure OnMainClose(var ACloseAction: TCloseAction);
 
+        procedure Changed;
+
         procedure AddIcon(const AIcon: TGEOSDesignerIcon);
+        procedure RemoveIcon(const AIcon: TGEOSDesignerIcon);
 
         property  ProjectName: string read FProjectName;
         property  ElementsCount: Integer read GetElementsCount;
@@ -111,7 +114,8 @@ implementation
 
 uses
     Laz2_DOM, Laz2_XMLWrite, GEOSGraphics, Dialogs, FormGEOSDesignerNew,
-    FormGEOSDesignerPreview, FormGEOSDesignerIconEdit;
+    FormGEOSDesignerPreview, FormGEOSDesignerIconEdit,
+    FormGEOSDesignerAddElem;
 
 resourcestring
     STR_CAP_GEOSMODE40COL = ' (40 Columns)';
@@ -192,8 +196,23 @@ procedure TGEOSDesignerMainDMod.ActionList1Update(AAction: TBasicAction;
     end;
 
 procedure TGEOSDesignerMainDMod.ActEditAddElemExecute(Sender: TObject);
+    var
+    e: TGEOSDesignerElementClass;
+
     begin
-//todo ActEditAddEleme Add element
+    if  GEOSDesignerAddElemForm.ShowModal = mrOk then
+        begin
+        with GEOSDesignerAddElemForm do
+            begin
+            e:= TGEOSDesignerElementClass(
+                    GEOSDesignerElements[CmbElements.ItemIndex]);
+
+            FElements.Add(e.Create(EdtIdentifier.Text));
+            end;
+
+        DoOnChange;
+        FMainFrame.InitialiseDisplay;
+        end;
     end;
 
 procedure TGEOSDesignerMainDMod.ActEditDelElemExecute(Sender: TObject);
@@ -226,6 +245,7 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
 
     begin
     DoClearBitmap;
+    GEOSSystemFont.Style:= [];
 
     for i:= 0 to FElements.Count - 1 do
         begin
@@ -236,7 +256,8 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
         end;
 
     if  GEOSShowMouse then
-        GEOSBitmapUp(FBitmap.Canvas, GEOSMouseXPos, GEOSMouseYPos, FMouse, True);
+        GEOSBitmapUp(FBitmap.Canvas, GEOSMouseXPos, GEOSMouseYPos, FMouse, True,
+                True);
 
     r:= Rect(0, 0, ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width,
             ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height);
@@ -474,7 +495,6 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
     ie.ShowMouse:= True;
 
     FElements.Add(ie);
-
     end;
 
 procedure TGEOSDesignerMainDMod.OnMainShow;
@@ -544,9 +564,27 @@ procedure TGEOSDesignerMainDMod.OnMainClose(var ACloseAction: TCloseAction);
         end;
     end;
 
+procedure TGEOSDesignerMainDMod.Changed;
+    begin
+    DoOnChange;
+    end;
+
 procedure TGEOSDesignerMainDMod.AddIcon(const AIcon: TGEOSDesignerIcon);
     begin
     FIcons.Add(AIcon);
+
+    if  Assigned(FMainFrame.SelectedElem) then
+        if  FMainFrame.SelectedElem is TGEOSDoIconsElement then
+            FMainFrame.RedisplayActiveElement;
+    end;
+
+procedure TGEOSDesignerMainDMod.RemoveIcon(const AIcon: TGEOSDesignerIcon);
+    begin
+    FIcons.Remove(AIcon);
+
+    if  Assigned(FMainFrame.SelectedElem) then
+        if  FMainFrame.SelectedElem is TGEOSDoIconsElement then
+            FMainFrame.RedisplayActiveElement;
     end;
 
 end.

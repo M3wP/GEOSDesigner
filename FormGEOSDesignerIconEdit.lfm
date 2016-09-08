@@ -41,11 +41,12 @@ object GEOSDesignerIconEditForm: TGEOSDesignerIconEditForm
         ImageIndex = 0
         OnClick = TlBtnIconAddClick
       end
-      object ToolButton1: TToolButton
+      object TlBtnIconDel: TToolButton
         Left = 24
         Top = 2
         Caption = 'TlBtnGrphDelete'
         ImageIndex = 1
+        OnClick = TlBtnIconDelClick
       end
     end
   end

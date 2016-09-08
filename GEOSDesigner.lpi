@@ -115,7 +115,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="11">
+    <Units Count="13">
       <Unit0>
         <Filename Value="GEOSDesigner.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -131,12 +131,14 @@
         <Filename Value="DModGEOSDesignerMain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="GEOSDesignerMainDMod"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
       </Unit2>
       <Unit3>
         <Filename Value="FrameGEOSDesignerMain.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="GEOSDesignerMainFrame"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit3>
       <Unit4>
@@ -173,8 +175,23 @@
         <Filename Value="FormGEOSDesignerIconEdit.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="GEOSDesignerIconEditForm"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit10>
+      <Unit11>
+        <Filename Value="FormGEOSDesignerAddElem.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="GEOSDesignerAddElemForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="FormGEOSDesignerAddGPStrInstr.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="GEOSDesignerAddGPStrInstrForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

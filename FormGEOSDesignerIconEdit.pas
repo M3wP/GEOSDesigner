@@ -45,7 +45,7 @@ type
         OpenPictureDialog1: TOpenPictureDialog;
         Panel1: TPanel;
         Panel2: TPanel;
-        ToolButton1: TToolButton;
+        TlBtnIconDel: TToolButton;
         ToolBar1: TToolBar;
         TlBtnIconAdd: TToolButton;
         procedure DrwGrdIconDrawCell(Sender: TObject; aCol, aRow: Integer;
@@ -56,6 +56,7 @@ type
         procedure FormShow(Sender: TObject);
         procedure LstBxIconsSelectionChange(Sender: TObject; User: boolean);
         procedure TlBtnIconAddClick(Sender: TObject);
+        procedure TlBtnIconDelClick(Sender: TObject);
     private
         FData: TMemoryStream;
         FSelected: TGEOSDesignerIcon;
@@ -99,7 +100,9 @@ procedure TGEOSDesignerIconEditForm.LstBxIconsSelectionChange(Sender: TObject;
             end;
 
     if  s > -1 then
-        InitialiseIconView(s);
+        InitialiseIconView(s)
+    else
+        TlBtnIconDel.Enabled:= False;
     end;
 
 procedure TGEOSDesignerIconEditForm.TlBtnIconAddClick(Sender: TObject);
@@ -185,6 +188,43 @@ procedure TGEOSDesignerIconEditForm.TlBtnIconAddClick(Sender: TObject);
         end;
     end;
 
+procedure TGEOSDesignerIconEditForm.TlBtnIconDelClick(Sender: TObject);
+    var
+    i,
+    j: Integer;
+    f: Boolean;
+    e: TGEOSDoIconsElement;
+
+    begin
+    f:= False;
+    for i:= 0 to GEOSDesignerMainDMod.ElementsCount - 1 do
+        begin
+        if  GEOSDesignerMainDMod.Elements[i] is TGEOSDoIconsElement then
+            begin
+            e:= GEOSDesignerMainDMod.Elements[i] as TGEOSDoIconsElement;
+            for j:= 0 to e.Count - 1 do
+                if  e.Icons[j] = FSelected then
+                    begin
+                    f:= True;
+                    Break;
+                    end;
+            end;
+
+        if  f then
+            Break;
+        end;
+
+    if  f then
+        MessageDlg('GEOS Designer',
+                'The selected icon is in use and cannot be deleted.',
+                mtWarning, [mbOk], -1)
+    else
+        begin
+        GEOSDesignerMainDMod.RemoveIcon(FSelected);
+        InitialiseDisplay;
+        end;
+    end;
+
 procedure TGEOSDesignerIconEditForm.InitialiseIconView(const AIndex: Integer);
     begin
     FSelected:= GEOSDesignerMainDMod.Icons[AIndex];
@@ -192,6 +232,9 @@ procedure TGEOSDesignerIconEditForm.InitialiseIconView(const AIndex: Integer);
     FData.Position:= 0;
     FData.Size:= 0;
     FSelected.Data.Position:= 0;
+
+    TlBtnIconDel.Enabled:= not FSelected.System;
+
     GEOSDecompactBitmap(FSelected.Data, FData);
 
     DrwGrdIcon.ColCount:= FSelected.Width;

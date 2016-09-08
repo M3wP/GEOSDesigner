@@ -107,11 +107,12 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           Caption = 'ToolBar1'
           Images = GEOSDesignerMainDMod.ImgLstItems
           TabOrder = 0
-          object ToolButton1: TToolButton
+          object TlBtnGrphAdd: TToolButton
             Left = 1
             Top = 2
-            Caption = 'ToolButton1'
+            Caption = 'TlBtnGrphAdd'
             ImageIndex = 0
+            OnClick = TlBtnGrphAddClick
           end
           object TlBtnGrphDelete: TToolButton
             Left = 24
@@ -125,6 +126,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 2
             Caption = 'TlBtnGrphEdit'
             ImageIndex = 2
+            OnClick = TlBtnGrphEditClick
           end
         end
       end
@@ -548,6 +550,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
         Width = 160
         Align = alLeft
         ItemHeight = 0
+        OnSelectionChange = LstBxDoIconsSelectionChange
         TabOrder = 1
       end
       object Splitter3: TSplitter
@@ -617,6 +620,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 0
             Width = 92
             MaxValue = 319
+            OnChange = SpEdtDoIconsXPosChange
             TabOrder = 0
           end
           object SpEdtDoIconsYPos: TSpinEdit
@@ -625,6 +629,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 32
             Width = 92
             MaxValue = 199
+            OnChange = SpEdtDoIconsYPosChange
             TabOrder = 1
           end
           object Label23: TLabel
@@ -635,11 +640,12 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Caption = 'Show Mouse:'
             ParentColor = False
           end
-          object CheckBox1: TCheckBox
+          object ChkBxDoIconsShowMouse: TCheckBox
             Left = 116
             Height = 19
             Top = 70
             Width = 20
+            OnChange = ChkBxDoIconsShowMouseChange
             TabOrder = 2
           end
         end
@@ -710,6 +716,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 104
             Width = 92
             MaxValue = 40
+            OnChange = SpEdtDoIconsItmXPosChange
             TabOrder = 0
           end
           object SpEdtDoIconsItmYPos: TSpinEdit
@@ -718,6 +725,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 136
             Width = 92
             MaxValue = 199
+            OnChange = SpEdtDoIconsItmYPosChange
             TabOrder = 1
           end
           object Label27: TLabel
@@ -734,6 +742,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 72
             Width = 172
             ItemHeight = 15
+            OnChange = CmbDoIconsIconChange
             Style = csDropDownList
             TabOrder = 2
           end
