@@ -15,6 +15,10 @@ type
     TGEOSDesignerAddGPStrInstrForm = class(TForm)
         BtnOK: TButton;
         BtnCancel: TButton;
+        ChkBxXYDblW: TCheckBox;
+        ChkBxXYAdd1W: TCheckBox;
+        ChkBxXDblW: TCheckBox;
+        ChkBxXAdd1W: TCheckBox;
         CmbCommand: TComboBox;
         CmbExType: TComboBoxEx;
         CmbExPattern: TComboBoxEx;
@@ -69,6 +73,9 @@ var
 implementation
 
 {$R *.lfm}
+
+uses
+    GEOSTypes;
 
 type
     TGPStrInstrDetails = packed record
@@ -188,11 +195,17 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoXlatDataToCtrls(
             begin
             DoSetSpEdtFromWord(SpEdtXYXPos, FInstr^.InstrData, 0);
             DoSetSpEdtFromWord(SpEdtXYYPos, FInstr^.InstrData, 2);
+            ChkBxXYDblW.Checked:= FInstr^.DoubleW;
+            ChkBxXYAdd1W.Checked:= FInstr^.Add1W;
             end;
         1:
             CmbExPattern.ItemIndex:= FInstr^.InstrData[0];
         2:
+            begin
             DoSetSpEdtFromWord(SpEdtXXPos, FInstr^.InstrData, 0);
+            ChkBxXDblW.Checked:= FInstr^.DoubleW;
+            ChkBxXAdd1W.Checked:= FInstr^.Add1W;
+            end;
         3:
             begin
             s:= EmptyStr;
@@ -236,6 +249,8 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoXlatCtrlsToData;
             SetLength(FInstr^.InstrData, 4);
             DoSetWordFromSpEdit(SpEdtXYXPos, FInstr^.InstrData, 0);
             DoSetWordFromSpEdit(SpEdtXYYPos, FInstr^.InstrData, 2);
+            FInstr^.DoubleW:= ChkBxXYDblW.Checked;
+            FInstr^.Add1W:= ChkBxXYAdd1W.Checked;
             end;
         1:
             begin
@@ -246,6 +261,8 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoXlatCtrlsToData;
             begin
             SetLength(FInstr^.InstrData, 2);
             DoSetWordFromSpEdit(SpEdtXXPos, FInstr^.InstrData, 0);
+            FInstr^.DoubleW:= ChkBxXDblW.Checked;
+            FInstr^.Add1W:= ChkBxXAdd1W.Checked;
             end;
         3:
             begin
@@ -269,11 +286,20 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoClearControls;
     LblDataNone.Visible:= True;
     SpEdtXYXPos.Value:= 0;
     SpEdtXYYPos.Value:= 0;
+    ChkBxXYAdd1W.Checked:= False;
+    ChkBxXYDblW.Checked:= False;
     SpEdtXXPos.Value:= 0;
+    ChkBxXAdd1W.Checked:= False;
+    ChkBxXDblW.Checked:= False;
     SpEdtYYPos.Value:= 0;
     EdtString.Text:= EmptyStr;
     CmbExPattern.ItemIndex:= 0;
     NtBkData.PageIndex:= -1;
+
+    SpEdtXYXPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+    SpEdtXYYPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+    SpEdtXXPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+    SpEdtYYPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
     end;
 
 procedure TGEOSDesignerAddGPStrInstrForm.DoPrepareControls;
@@ -305,6 +331,11 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoPrepareControls;
         CmbCommand.ItemIndex:= d;
         DoXlatDataToCtrls(d);
         end;
+
+    ChkBxXYDblW.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxXYAdd1W.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxXDblW.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxXAdd1W.Enabled:= GEOSDispMode = gdm80Column;
 
     ActiveControl:= CmbCommand;
     BtnOK.Enabled:= CmbCommand.ItemIndex > -1;

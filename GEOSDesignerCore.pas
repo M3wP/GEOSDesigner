@@ -55,7 +55,7 @@ type
         procedure DoChangedUpdate;
         procedure DoChanged;
 
-        procedure SetActive(const AValue: Boolean);
+        procedure SetActive(const AValue: Boolean); virtual;
 
     public
         constructor Create(const AIdent: string); virtual;
@@ -105,6 +105,8 @@ type
         InstrType: TGEOSGraphicsInstrType;
         InstrCmd: Byte;
         InstrData: array of Byte;
+        DoubleW: Boolean;
+        Add1W: Boolean;
     end;
 
 const
@@ -195,7 +197,8 @@ type
         destructor  Destroy; override;
 
         procedure AddItem(const AType: TGEOSGraphicsInstrType;
-                const ACmd: Byte; const AData: array of Byte);
+                const ACmd: Byte; const AData: array of Byte;
+                const ADoubleW: Boolean = False; const AAdd1W: Boolean = False);
         procedure DeleteItem(const AIndex: Integer);
 
         class function ElementName: string; override;
@@ -300,6 +303,8 @@ type
         function  GetItems(const AIndex: Integer): TGEOSDoMenuItem;
 
     protected
+        procedure SetActive(const AValue: Boolean); override;
+
         procedure Add(AMenuItem: TGEOSDoMenuItem);
 
     public
@@ -337,19 +342,26 @@ type
             Y: Word;
             Ident: string;
             Icon: TGEOSDesignerIcon;
+            DblBWidth,
+            DblBX: Boolean;
         end;
 
     private
         FXPos,
         FYPos: Word;
+        FDoubleW,
+        FAdd1W: Boolean;
         FDetails: TList;
         FShowMouse: Boolean;
 
     protected
+        procedure SetActive(const AValue: Boolean); override;
         procedure SetShowMouse(const AValue: Boolean);
 
         procedure SetXPos(const AValue: Word);
         procedure SetYPos(const AValue: Word);
+        procedure SetDoubleW(const AValue: Boolean);
+        procedure SetAdd1W(const AValue: Boolean);
 
         function  GetCount: Integer;
         function  GetIcons(const AIndex: Integer): TGEOSDesignerIcon;
@@ -359,6 +371,10 @@ type
         function  GetIconsYPos(const AIndex: Integer): Word;
         procedure SetIconsYPos(const AIndex: Integer; const AValue: Word);
         function  GetIconsIdent(const AIndex: Integer): string;
+        function  GetIconsDblBX(const AIndex: Integer): Boolean;
+        procedure SetIconsDblBX(const AIndex: Integer; const AValue: Boolean);
+        function  GetIconsDblBWidth(const AIndex: Integer): Boolean;
+        procedure SetIconsDblBWidth(const AIndex: Integer; const AValue: Boolean);
 
     public
         constructor Create(const AIdent: string); override;
@@ -375,20 +391,28 @@ type
         procedure LoadFromXML(const ASourceNode: TDOMNode); override;
 
         procedure Add(const AX, AY: Word; const AIdent: string;
-                const AIcon: TGEOSDesignerIcon);
+                const AIcon: TGEOSDesignerIcon;
+                const ADblWidth: Boolean = False;
+                const ADblX: Boolean = False);
         procedure Delete(const AIndex: Integer);
 
         property  ShowMouse: Boolean read FShowMouse write SetShowMouse;
         property  XPos: Word read FXPos write SetXPos;
+        property  DoubleW: Boolean read FDoubleW write SetDoubleW;
+        property  Add1W: Boolean read FAdd1W write SetAdd1W;
         property  YPos: Word read FYPos write SetYPos;
         property  Count: Integer read GetCount;
         property  Icons[const AIndex: Integer]: TGEOSDesignerIcon
                 read GetIcons write SetIcons; default;
+        property  IconsIdent[const AIndex: Integer]: string read GetIconsIdent;
         property  IconsXPos[const AIndex: Integer]: Word read GetIconsXPos
                 write SetIconsXPos;
         property  IconsYPos[const AIndex: Integer]: Word read GetIconsYPos
                 write SetIconsYPos;
-        property  IconsIdent[const AIndex: Integer]: string read GetIconsIdent;
+        property  IconsDblBWidth[const AIndex: Integer]: Boolean
+                read  GetIconsDblBWidth write SetIconsDblBWidth;
+        property  IconsDblBX[const AIndex: Integer]: Boolean
+                read  GetIconsDblBX write SetIconsDblBX;
     end;
 
 
@@ -418,6 +442,8 @@ const
 var
     FDispMode: TGEOSDisplayMode;
     FShowingMouse: TGEOSDoIconsElement;
+    FActiveMenu: TGEOSDoMenuElement;
+    FActiveIcons: TGEOSDoIconsElement;
 
 
 procedure RegisterElements;
@@ -479,7 +505,8 @@ function GEOSShowMouse: Boolean;
 function GEOSMouseXPos: Word;
     begin
     if  Assigned(FShowingMouse) then
-        Result:= FShowingMouse.FXPos
+        Result:= GEOSNormalizeX(FShowingMouse.FXPos, FShowingMouse.FDoubleW,
+                FShowingMouse.FAdd1W)
     else
         Result:= 0;
     end;
@@ -501,8 +528,36 @@ procedure SetGEOSShowMouse(const AValue: TGEOSDoIconsElement);
 
         FShowingMouse:= AValue;
 
-        if  Assigned(GEOSDesignerOnChange) then
-            GEOSDesignerOnChange;
+//      if  Assigned(GEOSDesignerOnChange) then
+//          GEOSDesignerOnChange;
+        end;
+    end;
+
+procedure SetGEOSActiveMenu(const AValue: TGEOSDoMenuElement);
+    begin
+    if  AValue <> FActiveMenu then
+        begin
+        if  Assigned(FActiveMenu) then
+            FActiveMenu.FActive:= False;
+
+        FActiveMenu:= AValue;
+
+//      if  Assigned(GEOSDesignerOnChange) then
+//          GEOSDesignerOnChange;
+        end;
+    end;
+
+procedure SetGEOSActiveIcons(const AValue: TGEOSDoIconsElement);
+    begin
+    if  AValue <> FActiveIcons then
+        begin
+        if  Assigned(FActiveIcons) then
+            FActiveIcons.FActive:= False;
+
+        FActiveIcons:= AValue;
+
+//      if  Assigned(GEOSDesignerOnChange) then
+//          GEOSDesignerOnChange;
         end;
     end;
 
@@ -524,6 +579,20 @@ class function TGEOSPutStringElement.ElementName: string;
 
 { TGEOSDoIconsElement }
 
+procedure TGEOSDoIconsElement.SetActive(const AValue: Boolean);
+    begin
+    if  AValue <> FActive then
+        begin
+        if  FActive then
+            SetGEOSActiveIcons(nil)
+        else
+            SetGEOSActiveIcons(Self);
+
+        FActive:= AValue;
+        DoChanged;
+        end;
+    end;
+
 procedure TGEOSDoIconsElement.SetShowMouse(const AValue: Boolean);
     begin
     if  AValue <> FShowMouse then
@@ -534,6 +603,7 @@ procedure TGEOSDoIconsElement.SetShowMouse(const AValue: Boolean);
             SetGEOSShowMouse(Self);
 
         FShowMouse:= AValue;
+        DoChanged;
         end;
     end;
 
@@ -551,6 +621,24 @@ procedure TGEOSDoIconsElement.SetYPos(const AValue: Word);
     if  AValue <> FYPos then
         begin
         FYPos:= AValue;
+        DoChanged;
+        end;
+    end;
+
+procedure TGEOSDoIconsElement.SetDoubleW(const AValue: Boolean);
+    begin
+    if  AValue <> FDoubleW then
+        begin
+        FDoubleW:= AValue;
+        DoChanged;
+        end;
+    end;
+
+procedure TGEOSDoIconsElement.SetAdd1W(const AValue: Boolean);
+    begin
+    if  AValue <> FAdd1W then
+        begin
+        FAdd1W:= AValue;
         DoChanged;
         end;
     end;
@@ -611,11 +699,42 @@ function TGEOSDoIconsElement.GetIconsIdent(const AIndex: Integer): string;
     Result:= PGEOSIconDetails(FDetails[AIndex])^.Ident;
     end;
 
+function TGEOSDoIconsElement.GetIconsDblBX(const AIndex: Integer): Boolean;
+    begin
+    Result:= PGEOSIconDetails(FDetails[AIndex])^.DblBX;
+    end;
+
+procedure TGEOSDoIconsElement.SetIconsDblBX(const AIndex: Integer;
+        const AValue: Boolean);
+    begin
+    if  PGEOSIconDetails(FDetails[AIndex])^.DblBX <> AValue then
+        begin
+        PGEOSIconDetails(FDetails[AIndex])^.DblBX:= AValue;
+        DoChanged;
+        end;
+    end;
+
+function TGEOSDoIconsElement.GetIconsDblBWidth(const AIndex: Integer): Boolean;
+    begin
+    Result:= PGEOSIconDetails(FDetails[AIndex])^.DblBWidth;
+    end;
+
+procedure TGEOSDoIconsElement.SetIconsDblBWidth(const AIndex: Integer;
+        const AValue: Boolean);
+    begin
+    if  PGEOSIconDetails(FDetails[AIndex])^.DblBWidth <> AValue then
+        begin
+        PGEOSIconDetails(FDetails[AIndex])^.DblBWidth:= AValue;
+        DoChanged;
+        end;
+    end;
+
 constructor TGEOSDoIconsElement.Create(const AIdent: string);
     begin
     inherited Create(AIdent);
 
     FDetails:= TList.Create;
+    FActive:= False;
     end;
 
 destructor TGEOSDoIconsElement.Destroy;
@@ -650,7 +769,8 @@ procedure TGEOSDoIconsElement.PreparePreview(const ABitmap: TBitmap);
     for i:= 0 to FDetails.Count - 1 do
         begin
         d:= PGEOSIconDetails(FDetails[i]);
-        GEOSBitmapUp(ABitmap.Canvas, d^.X, d^.Y, d^.Icon);
+        GEOSBitmapUp(ABitmap.Canvas, d^.X, d^.Y, d^.Icon, d^.DblBWidth,
+                False, d^.DblBX);
         end;
     end;
 
@@ -676,7 +796,8 @@ procedure TGEOSDoIconsElement.LoadFromXML(const ASourceNode: TDOMNode);
     end;
 
 procedure TGEOSDoIconsElement.Add(const AX, AY: Word; const AIdent: string;
-        const AIcon: TGEOSDesignerIcon);
+    const AIcon: TGEOSDesignerIcon; const ADblWidth: Boolean;
+    const ADblX: Boolean);
     var
     d: PGEOSIconDetails;
 
@@ -688,6 +809,8 @@ procedure TGEOSDoIconsElement.Add(const AX, AY: Word; const AIdent: string;
     d^.Y:= AY;
     d^.Ident:= AIdent;
     d^.Icon:= AIcon;
+    d^.DblBWidth:= ADblWidth;
+    d^.DblBX:= ADblX;
 
     FDetails.Add(d);
     DoChanged;
@@ -733,6 +856,20 @@ function TGEOSDoMenuElement.GetItems(const AIndex: Integer): TGEOSDoMenuItem;
     Result:= TGEOSDoMenuItem(FItems[AIndex]);
     end;
 
+procedure TGEOSDoMenuElement.SetActive(const AValue: Boolean);
+    begin
+    if  AValue <> FActive then
+        begin
+        if  FActive then
+            SetGEOSActiveMenu(nil)
+        else
+            SetGEOSActiveMenu(Self);
+
+        FActive:= AValue;
+        DoChanged;
+        end;
+    end;
+
 procedure TGEOSDoMenuElement.Add(AMenuItem: TGEOSDoMenuItem);
     begin
     FItems.Add(AMenuItem);
@@ -744,6 +881,8 @@ constructor TGEOSDoMenuElement.Create(const AIdent: string);
     FItems:= TObjectList.Create(True);
 
     inherited Create(AIdent);
+
+    FActive:= False;
     end;
 
 destructor TGEOSDoMenuElement.Destroy;
@@ -1204,7 +1343,8 @@ destructor TGEOSGraphicsStrElement.Destroy;
     end;
 
 procedure TGEOSGraphicsStrElement.AddItem(const AType: TGEOSGraphicsInstrType;
-        const ACmd: Byte; const AData: array of Byte);
+        const ACmd: Byte; const AData: array of Byte;
+        const ADoubleW, AAdd1W: Boolean);
     var
     i: Integer;
     r: PGEOSGraphicsInstr;
@@ -1240,6 +1380,9 @@ procedure TGEOSGraphicsStrElement.AddItem(const AType: TGEOSGraphicsInstrType;
     SetLength(r^.InstrData, i);
     if  i > 0 then
         Move(AData[0], r^.InstrData[0], i);
+
+    r^.DoubleW:= ADoubleW;
+    r^.Add1W:= AAdd1W;
 
     FItems.Add(r);
 
@@ -1300,14 +1443,15 @@ procedure TGEOSGraphicsStrElement.PreparePreview(const ABitmap: TBitmap);
         begin
         case  ACmd of
             VAL_CMD_GEOSGSTR_MOVETO:
-                ABitmap.Canvas.PenPos:= Point(GetWordValue(AData, 0),
+                ABitmap.Canvas.PenPos:= Point(
+                        GEOSNormalizeX(GetWordValue(AData, 0), r^.DoubleW, r^.Add1W),
                         GetWordValue(AData, 2));
             VAL_CMD_GEOSGSTR_LINETO:
-                GEOSSolidLineTo(ABitmap.Canvas, GetWordValue(AData, 0),
-                        GetWordValue(AData, 2));
+                GEOSSolidLineTo(ABitmap.Canvas,GetWordValue(AData, 0),
+                        GetWordValue(AData, 2), r^.DoubleW, r^.Add1W);
             VAL_CMD_GEOSGSTR_RECTTO:
                 GEOSRectangleTo(ABitmap.Canvas, GetWordValue(AData, 0),
-                        GetWordValue(AData, 2));
+                        GetWordValue(AData, 2), r^.DoubleW, r^.Add1W);
             4:
 //              Not used
                 ;
@@ -1318,7 +1462,7 @@ procedure TGEOSGraphicsStrElement.PreparePreview(const ABitmap: TBitmap);
                 ;
             VAL_CMD_GEOSGSTR_FMRECT:
                 GEOSFrameRectTo(ABitmap.Canvas, GetWordValue(AData, 0),
-                        GetWordValue(AData, 2));
+                        GetWordValue(AData, 2), r^.DoubleW, r^.Add1W);
             end;
         end;
 
@@ -1392,13 +1536,15 @@ procedure TGEOSGraphicsStrElement.PreparePreview(const ABitmap: TBitmap);
             VAL_CMD_GEOSPSTR_REVSOF:
                 GEOSSystemFont.Style:= GEOSSystemFont.Style - [gfsReverse];
             VAL_CMD_GEOSPSTR_GOTOXP:
-                ABitmap.Canvas.PenPos:= Point(GetWordValue(AData, 0),
+                ABitmap.Canvas.PenPos:= Point(
+                        GEOSNormalizeX(GetWordValue(AData, 0), r^.DoubleW, r^.Add1W),
                         ABitmap.Canvas.PenPos.y);
             VAL_CMD_GEOSPSTR_GOTOYP:
                 ABitmap.Canvas.PenPos:= Point(ABitmap.Canvas.PenPos.x,
                         GetWordValue(AData, 0));
             VAL_CMD_GEOSPSTR_GOTOXY:
-                ABitmap.Canvas.PenPos:= Point(GetWordValue(AData, 0),
+                ABitmap.Canvas.PenPos:=Point(
+                        GEOSNormalizeX(GetWordValue(AData, 0), r^.DoubleW, r^.Add1W),
                         GetWordValue(AData, 2));
             VAL_CMD_GEOSPSTR_NEWFNT:
                 ;
@@ -1415,11 +1561,16 @@ procedure TGEOSGraphicsStrElement.PreparePreview(const ABitmap: TBitmap);
             VAL_CMD_GEOSPSTR_SHRTCT,
             VAL_CMD_GEOSPSTR_PUTSTR:
                 begin
-                s:= EmptyStr;
-                for i:= 0 to High(AData) do
+                if  ACmd = VAL_CMD_GEOSPSTR_SHRTCT then
+                    s:= string(#$80)
+                else
                     begin
-                    c:= AnsiChar(AData[i]);
-                    s:= s + string(c);
+                    s:= EmptyStr;
+                    for i:= 0 to High(AData) do
+                        begin
+                        c:= AnsiChar(AData[i]);
+                        s:= s + string(c);
+                        end;
                     end;
 
                 GEOSSystemFont.TextOut(ABitmap.Canvas, ABitmap.Canvas.PenPos.x,
@@ -1484,6 +1635,8 @@ procedure TGEOSGraphicsStrElement.SaveToXML(const ADoc: TXMLDocument;
         cn.SetAttribute('index', IntToStr(i));
         cn.SetAttribute('instrtype', IntToStr(Ord(itm^.InstrType)));
         cn.SetAttribute('instrcmd', IntToStr(itm^.InstrCmd));
+        cn.SetAttribute('doublew', IntToStr(Ord(itm^.DoubleW)));
+        cn.SetAttribute('add1w', IntToStr(Ord(itm^.Add1W)));
 
         cn.SetAttribute('datasize', IntToStr(Length(itm^.InstrData)));
 

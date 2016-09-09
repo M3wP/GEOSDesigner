@@ -44,6 +44,7 @@ type
         procedure EdtIdentifierKeyPress(Sender: TObject; var Key: char);
         procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
         procedure FormCreate(Sender: TObject);
+        procedure FormShow(Sender: TObject);
     private
         { private declarations }
     public
@@ -87,7 +88,8 @@ procedure TGEOSDesignerAddElemForm.FormClose(Sender: TObject;
         var CloseAction: TCloseAction);
     begin
     if  (ModalResult = mrOk)
-    and (Length(EdtIdentifier.Text) = 0) then
+    and ((Length(EdtIdentifier.Text) = 0)
+    or   (GEOSDesignerIdents.IndexOf(EdtIdentifier.Text) > -1)) then
         begin
         ModalResult:= mrNone;
         CloseAction:= caNone;
@@ -115,8 +117,13 @@ procedure TGEOSDesignerAddElemForm.FormCreate(Sender: TObject);
         finally
         CmbElements.Items.EndUpdate;
         end;
+    end;
 
+procedure TGEOSDesignerAddElemForm.FormShow(Sender: TObject);
+    begin
     CmbElements.ItemIndex:= 0;
+    EdtIdentifier.Text:= EmptyStr;
+    ActiveControl:= CmbElements;
     end;
 
 

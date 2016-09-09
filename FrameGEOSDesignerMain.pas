@@ -42,9 +42,13 @@ type
 { TGEOSDesignerMainFrame }
 
     TGEOSDesignerMainFrame = class(TFrame)
+        ChkBxDoIconsDblW: TCheckBox;
+        ChkBxDoIconsAdd1W: TCheckBox;
         ChkBxDoIconsShowMouse: TCheckBox;
         ChkBxDoMenuItmCnstrnd: TCheckBox;
         ChkBxDoMenuItmVisible: TCheckBox;
+        ChkBxDoIconsItmDblW: TCheckBox;
+        ChkBxDoIconsItmDblB: TCheckBox;
         ChkLstBxElements: TCheckListBox;
         CmbDoMenuItmType: TComboBox;
         CmbDoMenuItmAlign: TComboBox;
@@ -126,6 +130,10 @@ type
         ToolButton2: TToolButton;
         ToolButton3: TToolButton;
         TreeVwDoMenu: TTreeView;
+        procedure ChkBxDoIconsAdd1WChange(Sender: TObject);
+        procedure ChkBxDoIconsDblWChange(Sender: TObject);
+        procedure ChkBxDoIconsItmDblBChange(Sender: TObject);
+        procedure ChkBxDoIconsItmDblWChange(Sender: TObject);
         procedure ChkBxDoIconsShowMouseChange(Sender: TObject);
         procedure ChkLstBxElementsClick(Sender: TObject);
         procedure ChkLstBxElementsClickCheck(Sender: TObject);
@@ -161,6 +169,7 @@ type
 
     public
         procedure InitialiseDisplay;
+        procedure UpdateElements;
         procedure RedisplayActiveElement;
 
         property  SelectedElem: TGEOSDesignerElement read FSelectedElem;
@@ -171,7 +180,7 @@ implementation
 {$R *.lfm}
 
 uses
-    DModGEOSDesignerMain, FormGEOSDesignerAddGPStrInstr;
+    GEOSTypes, DModGEOSDesignerMain, FormGEOSDesignerAddGPStrInstr;
 
 
 { TGEOSDesignerMainFrame }
@@ -320,7 +329,8 @@ procedure TGEOSDesignerMainFrame.TlBtnGrphAddClick(Sender: TObject);
 
     if  GEOSDesignerAddGPStrInstrForm.ShowAdd(e.Mode, itm) = mrOk then
         begin
-        e.AddItem(itm.InstrType, itm.InstrCmd, itm.InstrData);
+        e.AddItem(itm.InstrType, itm.InstrCmd, itm.InstrData, itm.DoubleW,
+                itm.Add1W);
         DoInitGrphStrElemView;
         GEOSDesignerMainDMod.Changed;
         end;
@@ -389,8 +399,9 @@ procedure TGEOSDesignerMainFrame.ChkLstBxElementsClickCheck(Sender: TObject);
     for i:= 0 to ChkLstBxElements.Count - 1 do
         GEOSDesignerMainDMod.Elements[i].Active:= ChkLstBxElements.Checked[i];
 
-    if  Assigned(GEOSDesignerOnChange) then
-        GEOSDesignerOnChange;
+//dengland Setting the element's active property will trigger this if necessary.
+//  if  Assigned(GEOSDesignerOnChange) then
+//      GEOSDesignerOnChange;
 
 //dengland  OnClick will be called after this so use that to handle selection
 //      changes.
@@ -410,6 +421,54 @@ procedure TGEOSDesignerMainFrame.ChkBxDoIconsShowMouseChange(Sender: TObject);
         begin
         e:= FSelectedElem as TGEOSDoIconsElement;
         e.ShowMouse:= ChkBxDoIconsShowMouse.Checked;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoIconsItmDblWChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.IconsDblBWidth[FSelectedItem]:= ChkBxDoIconsItmDblW.Checked;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoIconsItmDblBChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.IconsDblBX[FSelectedItem]:= ChkBxDoIconsItmDblB.Checked;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoIconsDblWChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.DoubleW:= ChkBxDoIconsDblW.Checked;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoIconsAdd1WChange(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSDoIconsElement;
+        e.Add1W:= ChkBxDoIconsAdd1W.Checked;
         end;
     end;
 
@@ -434,6 +493,8 @@ procedure TGEOSDesignerMainFrame.DoDoIconsItemSelect(const AItem: Integer);
         CmbDoIconsIcon.ItemIndex:= CmbDoIconsIcon.Items.IndexOf(e[AItem].Indentifier);
         SpEdtDoIconsItmXPos.Value:= e.IconsXPos[AItem];
         SpEdtDoIconsItmYPos.Value:= e.IconsYPos[AItem];
+        ChkBxDoIconsItmDblW.Checked:= e.IconsDblBWidth[AItem];
+        ChkBxDoIconsItmDblB.Checked:= e.IconsDblBX[AItem];
 
         finally
         FChanging:= False;
@@ -477,6 +538,12 @@ procedure TGEOSDesignerMainFrame.DoInitGrphStrElemView;
             s:= EmptyStr;
             for j:= 0 to High(inst^.InstrData) do
                 s:= s + Format('$%2.2x ', [inst^.InstrData[j]]);
+
+            if  inst^.DoubleW then
+                s:= s + '(DBLW) ';
+
+            if  inst^.Add1W then
+                s:= s + '(ADD1W) ';
 
             litm.SubItems.Add(s);
             end;
@@ -550,6 +617,17 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
     begin
     e:= FSelectedElem as TGEOSDoIconsElement;
 
+    SpEdtDoIconsXPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+    SpEdtDoIconsYPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+    ChkBxDoIconsDblW.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxDoIconsAdd1W.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxDoIconsItmDblW.Enabled:= GEOSDispMode = gdm80Column;
+    ChkBxDoIconsItmDblB.Enabled:= GEOSDispMode = gdm80Column;
+    SpEdtDoIconsItmXPos.MaxValue:=
+            ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width div 8 - 1;
+    SpEdtDoIconsItmYPos.MaxValue:=
+            ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+
     FChanging:= True;
     try
         LblDoIconsIdent.Caption:= e.Identifier;
@@ -567,6 +645,9 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
         SpEdtDoIconsXPos.Value:= e.XPos;
         SpEdtDoIconsYPos.Value:= e.YPos;
 
+        ChkBxDoIconsDblW.Checked:= e.DoubleW;
+        ChkBxDoIconsAdd1W.Checked:= e.Add1W;
+
         ChkBxDoIconsShowMouse.Checked:= e.ShowMouse;
 
         CmbDoIconsIcon.Items.BeginUpdate;
@@ -581,6 +662,10 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
             end;
 
         CmbDoIconsIcon.ItemIndex:= -1;
+        ChkBxDoIconsItmDblW.Checked:= False;
+        SpEdtDoIconsItmXPos.Value:= 0;
+        ChkBxDoIconsItmDblB.Checked:= False;
+        SpEdtDoIconsItmYPos.Value:= 0;
 
         finally
         FChanging:= False;
@@ -660,6 +745,15 @@ procedure TGEOSDesignerMainFrame.InitialiseDisplay;
         end
     else
         NtBkDetails.PageIndex:= -1;
+    end;
+
+procedure TGEOSDesignerMainFrame.UpdateElements;
+    var
+    i: Integer;
+
+    begin
+    for i:= 0 to GEOSDesignerMainDMod.ElementsCount - 1 do
+        ChkLstBxElements.Checked[i]:= GEOSDesignerMainDMod.Elements[i].Active;
     end;
 
 procedure TGEOSDesignerMainFrame.RedisplayActiveElement;

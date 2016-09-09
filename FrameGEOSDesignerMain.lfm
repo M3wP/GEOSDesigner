@@ -582,12 +582,12 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
         end
         object Panel10: TPanel
           Left = 0
-          Height = 105
+          Height = 137
           Top = 23
           Width = 333
           Align = alTop
           BevelOuter = bvNone
-          ClientHeight = 105
+          ClientHeight = 137
           ClientWidth = 333
           TabOrder = 0
           object Label19: TLabel
@@ -609,7 +609,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object Label21: TLabel
             Left = 88
             Height = 15
-            Top = 36
+            Top = 68
             Width = 10
             Caption = 'Y:'
             ParentColor = False
@@ -626,16 +626,16 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object SpEdtDoIconsYPos: TSpinEdit
             Left = 116
             Height = 23
-            Top = 32
+            Top = 64
             Width = 92
             MaxValue = 199
             OnChange = SpEdtDoIconsYPosChange
-            TabOrder = 1
+            TabOrder = 3
           end
           object Label23: TLabel
             Left = 8
             Height = 15
-            Top = 72
+            Top = 104
             Width = 71
             Caption = 'Show Mouse:'
             ParentColor = False
@@ -643,20 +643,38 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object ChkBxDoIconsShowMouse: TCheckBox
             Left = 116
             Height = 19
-            Top = 70
+            Top = 102
             Width = 20
             OnChange = ChkBxDoIconsShowMouseChange
+            TabOrder = 4
+          end
+          object ChkBxDoIconsDblW: TCheckBox
+            Left = 116
+            Height = 19
+            Top = 32
+            Width = 83
+            Caption = 'DOUBLE _W'
+            OnChange = ChkBxDoIconsDblWChange
+            TabOrder = 1
+          end
+          object ChkBxDoIconsAdd1W: TCheckBox
+            Left = 222
+            Height = 19
+            Top = 32
+            Width = 66
+            Caption = 'ADD1_W'
+            OnChange = ChkBxDoIconsAdd1WChange
             TabOrder = 2
           end
         end
         object Panel11: TPanel
           Left = 0
-          Height = 352
-          Top = 128
+          Height = 320
+          Top = 160
           Width = 333
           Align = alClient
           BevelOuter = bvNone
-          ClientHeight = 352
+          ClientHeight = 320
           ClientWidth = 333
           TabOrder = 1
           object DividerBevel4: TDividerBevel
@@ -689,7 +707,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object Label24: TLabel
             Left = 8
             Height = 15
-            Top = 108
+            Top = 140
             Width = 48
             Caption = 'Icon Pos.'
             ParentColor = False
@@ -697,7 +715,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object Label25: TLabel
             Left = 88
             Height = 15
-            Top = 108
+            Top = 140
             Width = 10
             Caption = 'X:'
             ParentColor = False
@@ -705,7 +723,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object Label26: TLabel
             Left = 88
             Height = 15
-            Top = 140
+            Top = 204
             Width = 10
             Caption = 'Y:'
             ParentColor = False
@@ -713,20 +731,20 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           object SpEdtDoIconsItmXPos: TSpinEdit
             Left = 116
             Height = 23
-            Top = 104
+            Top = 136
             Width = 92
             MaxValue = 40
             OnChange = SpEdtDoIconsItmXPosChange
-            TabOrder = 0
+            TabOrder = 1
           end
           object SpEdtDoIconsItmYPos: TSpinEdit
             Left = 116
             Height = 23
-            Top = 136
+            Top = 200
             Width = 92
             MaxValue = 199
             OnChange = SpEdtDoIconsItmYPosChange
-            TabOrder = 1
+            TabOrder = 3
           end
           object Label27: TLabel
             Left = 8
@@ -744,15 +762,33 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             ItemHeight = 15
             OnChange = CmbDoIconsIconChange
             Style = csDropDownList
-            TabOrder = 2
+            TabOrder = 0
           end
           object Label28: TLabel
             Left = 224
             Height = 15
-            Top = 108
+            Top = 140
             Width = 44
             Caption = '(in cells)'
             ParentColor = False
+          end
+          object ChkBxDoIconsItmDblW: TCheckBox
+            Left = 116
+            Height = 19
+            Top = 104
+            Width = 105
+            Caption = 'DOUBLE WIDTH'
+            OnChange = ChkBxDoIconsItmDblWChange
+            TabOrder = 2
+          end
+          object ChkBxDoIconsItmDblB: TCheckBox
+            Left = 116
+            Height = 19
+            Top = 168
+            Width = 76
+            Caption = 'DOUBLE_B'
+            OnChange = ChkBxDoIconsItmDblBChange
+            TabOrder = 4
           end
         end
       end

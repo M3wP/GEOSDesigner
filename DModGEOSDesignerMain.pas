@@ -210,8 +210,8 @@ procedure TGEOSDesignerMainDMod.ActEditAddElemExecute(Sender: TObject);
             FElements.Add(e.Create(EdtIdentifier.Text));
             end;
 
-        DoOnChange;
         FMainFrame.InitialiseDisplay;
+        DoOnChange;
         end;
     end;
 
@@ -221,9 +221,8 @@ procedure TGEOSDesignerMainDMod.ActEditDelElemExecute(Sender: TObject);
 //dengland Because the ObjectList owns the objects, this isn't necessary.
 //  FMainFrame.SelectedElem.Free;
 
-    DoOnChange;
-
     FMainFrame.InitialiseDisplay;
+    DoOnChange;
     end;
 
 procedure TGEOSDesignerMainDMod.DataModuleDestroy(Sender: TObject);
@@ -247,6 +246,12 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
     DoClearBitmap;
     GEOSSystemFont.Style:= [];
 
+//dengland This is going to cause some "double dipping" on the updates but its
+//      necessary to catch activiation changes.  It means that DoOnChange has
+//      to be called _after_ FMainFrame.InitialiseDisplay when its used, though.
+    if  Assigned(FMainFrame) then
+        FMainFrame.UpdateElements;
+
     for i:= 0 to FElements.Count - 1 do
         begin
         e:= FElements[i] as TGEOSDesignerElement;
@@ -256,8 +261,8 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
         end;
 
     if  GEOSShowMouse then
-        GEOSBitmapUp(FBitmap.Canvas, GEOSMouseXPos, GEOSMouseYPos, FMouse, True,
-                True);
+        GEOSBitmapUp(FBitmap.Canvas, GEOSMouseXPos, GEOSMouseYPos, FMouse,
+                False, False, False, True, True);
 
     r:= Rect(0, 0, ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width,
             ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height);
@@ -483,6 +488,7 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
 //  sm.Bounds:= Rect(x1, 30, x1 + GEOSSystemFont.TextExtent(' test ').x, 44);
 //  sm.Text:= 'test';
 
+    m.Active:= True;
     FElements.Add(m);
 
     ie:= TGEOSDoIconsElement.Create('MainIcons');
@@ -494,6 +500,7 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
             TGEOSDesignerIcon(FIcons[1]));
     ie.ShowMouse:= True;
 
+    ie.Active:= True;
     FElements.Add(ie);
     end;
 
@@ -534,7 +541,6 @@ procedure TGEOSDesignerMainDMod.OnMainShow;
 
         GEOSDesignerPreviewForm.Show;
         GEOSDesignerIconEditForm.Show;
-        DoOnChange;
 
         if  not Assigned(FMainFrame) then
             FMainFrame:= TGEOSDesignerMainFrame.Create(Self);
@@ -542,6 +548,7 @@ procedure TGEOSDesignerMainDMod.OnMainShow;
         FMainFrame.Align:= alClient;
 
         FMainFrame.InitialiseDisplay;
+        DoOnChange;
 
         FFirstTime:= False;
         end;

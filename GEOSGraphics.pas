@@ -40,17 +40,23 @@ uses
 //      convienience.
 function  GEOSSetPattern(const AValue: Byte): Byte;
 
+function  GEOSNormalizeX(const AX: Word; const ADoubleW, AAdd1W: Boolean): Integer;
+
 //dengland These xxxTo routines are used by GraphicsString and are different to
 //      the regular drawing routines in that they use a notion of current
 //      position (and don't have some extra features).
-procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word);
-procedure GEOSSolidLineTo(const ACanvas: TCanvas; const AX, AY: Word);
-procedure GEOSFrameRectTo(const ACanvas: TCanvas; const AX, AY: Word);
+procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word;
+        const ADoubleW: Boolean = False; const AAdd1W: Boolean = False);
+procedure GEOSSolidLineTo(const ACanvas: TCanvas; const AX, AY: Word;
+        const ADoubleW: Boolean = False; const AAdd1W: Boolean = False);
+procedure GEOSFrameRectTo(const ACanvas: TCanvas; const AX, AY: Word;
+        const ADoubleW: Boolean = False; const AAdd1W: Boolean = False);
 
 //dengland  I think technically, these don't exist in GEOS.  I should change
 //      them to regular routines that take all required parameters.
 procedure GEOSHorzLineTo(const ACanvas: TCanvas; const APattern: Byte;
-        const AX: Word);
+        const AX: Word; const ADoubleW: Boolean = False;
+        const AAdd1W: Boolean = False);
 procedure GEOSVertLineTo(const ACanvas: TCanvas; const APattern: Byte;
         const AY: Word);
 
@@ -58,10 +64,13 @@ procedure GEOSVertLineTo(const ACanvas: TCanvas; const APattern: Byte;
 procedure GEOSDecompactBitmap(const ADataIn, ADataOut: TStream);
 procedure GEOSCompactBitmap(const ADataIn, ADataOut: TStream);
 
-procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
+procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect;
+        const ADoubleWL: Boolean = False; const AAdd1WL: Boolean = False;
+        const ADoubleWR: Boolean = False; const AAdd1WR: Boolean = False);
 procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
-        const ABitmap: TGEOSBitmap; const ATransparent: Boolean = False;
-        const AXIsPixels: Boolean = False);
+        const ABitmap: TGEOSBitmap; const ADoubleW: Boolean = False;
+        const AAdd1W: Boolean = False; const ADoubleBX: Boolean = False;
+        const ATransparent: Boolean = False; const AXIsPixels: Boolean = False);
 
 var
     GEOSCurrPattrn: Byte = 0;
@@ -141,12 +150,25 @@ function GEOSSetPattern(const AValue: Byte): Byte;
         GEOSCurrPattrn:= AValue;
     end;
 
-procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
+function GEOSNormalizeX(const AX: Word; const ADoubleW, AAdd1W: Boolean): Integer;
+    begin
+//dengland Should do sign checking as per GEOS too, probably.  And should check
+//      the AX value for the flags.  Never mind.
+    Result:= AX;
+    if  ADoubleW then
+        Inc(Result, AX);
+    if  AAdd1W then
+        Inc(Result);
+    end;
+
+procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect;
+    const ADoubleWL, AAdd1WL, ADoubleWR, AAdd1WR: Boolean);
     var
     i,
     j: Integer;
     pc,
     bc: TColor;
+    r: TRect;
 
     begin
 //dengland I'm assuming there should be a sanity check.
@@ -157,9 +179,13 @@ procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
     pc:= ACanvas.Pen.Color;
     bc:= ACanvas.Brush.Color;
 
+    r:= ARect;
+    r.Left:= GEOSNormalizeX(r.Left, ADoubleWL, AAdd1WL);
+    r.Right:= GEOSNormalizeX(r.Right, ADoubleWR, AAdd1WR);
+
 //dengland Is inclusive...
-    for i:= ARect.Top to ARect.Bottom do
-        for j:= ARect.Left to ARect.Right do
+    for i:= r.Top to r.Bottom do
+        for j:= r.Left to r.Right do
             if  ACanvas.Pixels[j, i] = pc then
                 ACanvas.Pixels[j, i]:= bc
             else
@@ -167,8 +193,12 @@ procedure GEOSInvertRectangle(const ACanvas: TCanvas; const ARect: TRect);
     end;
 
 procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
-        const ABitmap: TGEOSBitmap; const ATransparent, AXIsPixels: Boolean);
+        const ABitmap: TGEOSBitmap; const ADoubleW: Boolean;
+        const AAdd1W: Boolean; const ADoubleBX: Boolean;
+        const ATransparent: Boolean; const AXIsPixels: Boolean);
+
     var
+    x: Integer;
     xp: Word;
     i,
     j: Integer;
@@ -184,6 +214,8 @@ procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
     else
         xp:= AXPos * 8;
 
+    xp:= GEOSNormalizeX(xp, ADoubleBX, False);
+
     m:= TMemoryStream.Create;
     try
         ABitmap.Data.Position:= 0;
@@ -196,12 +228,27 @@ procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
         b:= m.ReadByte;
         d:= 128;
         for i:= AYPos to AYPos + ABitmap.Height - 1 do
+            begin
+            x:= xp;
+
             for j:= xp to xp + ABitmap.Width - 1 do
                 begin
                 if  (b and d) <> 0 then
-                    ACanvas.Pixels[j, i]:= pc
+                    ACanvas.Pixels[x, i]:= pc
                 else if not ATransparent then
-                    ACanvas.Pixels[j, i]:= bc;
+                    ACanvas.Pixels[x, i]:= bc;
+
+                if  ADoubleW then
+                    begin
+                    Inc(x);
+                    if  (b and d) <> 0 then
+                        ACanvas.Pixels[x, i]:= pc
+                    else if not ATransparent then
+                        ACanvas.Pixels[x, i]:= bc;
+                    Inc(x);
+                    end
+                else
+                    Inc(x);
 
                 if  d = 1 then
                     begin
@@ -212,19 +259,22 @@ procedure GEOSBitmapUp(const ACanvas: TCanvas; const AXPos, AYPos: Word;
                 else
                     d:= d shr 1;
                 end;
-
+            end;
         finally
         m.Free;
         end;
     end;
 
-procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word);
+procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word;
+    const ADoubleW: Boolean; const AAdd1W: Boolean);
     var
     xs,
     xo,
     yo,
     x,
-    y: Integer;
+    x1,
+    y,
+    y1: Integer;
     d: Byte;
     c,
     i,
@@ -239,13 +289,26 @@ procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word);
     x:= ACanvas.PenPos.x;
     y:= ACanvas.PenPos.y;
 
+    x1:= GEOSNormalizeX(AX, ADoubleW, AAdd1W);
+    y1:= AY;
+
+    if  x > x1 then
+        begin
+        i:= x;
+        x:= x1;
+        x1:= i;
+        end;
+
+    if  y > y1 then
+        begin
+        i:= y;
+        y:= y1;
+        y1:= y;
+        end;
+
 //dengland I'm assuming this sanity logic is there
 //todo GEOSRectangleTo Check if can draw to a point higher/behind the current.
-    if  (x >= AX)
-    or  (y >= AY) then
-        Exit;
-
-    ACanvas.PenPos:= Point(AX, AY);
+    ACanvas.PenPos:= Point(x1, y1);
 
     xs:= 7 - (x mod 8);
     yo:= y mod 8;
@@ -253,12 +316,12 @@ procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word);
     pc:= ACanvas.Pen.Color;
     bc:= ACanvas.Brush.Color;
 
-    for i:= y to AY do
+    for i:= y to y1 do
         begin
         xo:= xs;
         d:= 1 shl xo;
         c:= GEOSCurrPattrn * 8 + yo;
-        for j:= x to AX do
+        for j:= x to x1 do
             begin
             if  (ARR_VAL_GEOSSYSPATNDAT[c] and d) <> 0 then
                 ACanvas.Pixels[j, i]:= pc
@@ -280,7 +343,8 @@ procedure GEOSRectangleTo(const ACanvas: TCanvas; const AX, AY: Word);
         end;
     end;
 
-procedure GEOSSolidLineTo(const ACanvas: TCanvas; const AX, AY: Word);
+procedure GEOSSolidLineTo(const ACanvas: TCanvas; const AX, AY: Word;
+    const ADoubleW: Boolean; const AAdd1W: Boolean);
     var
 //  sp: TPoint;
     ep: TPoint;
@@ -290,51 +354,34 @@ procedure GEOSSolidLineTo(const ACanvas: TCanvas; const AX, AY: Word);
     ACanvas.Pen.Style:= psSolid;
 
 //  GEOS points are inclusive.
-//  sp:= ACanvas.PenPos;
-
-
 //dengland It seems that when drawing lines, the points are inclusive.
-    //if  AX > sp.x then
-    //    ep.x:= AX + 1
-    //else if AX < sp.x then
-    //    ep.x:= AX - 1
-    //else
-    //    ep.x:= sp.x;
-    ep.x:= AX;
-
-
-    //if  AY > sp.y then
-    //    ep.y:= AY + 1
-    //else if AY < sp.y then
-    //    ep.y:= AY - 1
-    //else
-    //    ep.Y:= sp.y;
-
+    ep.x:= GEOSNormalizeX(AX, ADoubleW, AAdd1W);
     ep.y:= AY;
 
 //dengland  This may or may not be the same algorithm used by GEOS.  Hopefully
 //      it is close enough.
     ACanvas.LineTo(ep);
-    ACanvas.PenPos:= Point(AX, AY);
+    ACanvas.PenPos:= Point(ep.x, ep.y);
     end;
 
-procedure GEOSFrameRectTo(const ACanvas: TCanvas; const AX, AY: Word);
+procedure GEOSFrameRectTo(const ACanvas: TCanvas; const AX, AY: Word;
+    const ADoubleW: Boolean; const AAdd1W: Boolean);
     var
     sp: TPoint;
 
     begin
     sp:= ACanvas.PenPos;
 
-    GEOSSolidLineTo(ACanvas, AX, ACanvas.PenPos.y);
-    GEOSSolidLineTo(ACanvas, AX, AY);
-    GEOSSolidLineTo(ACanvas, sp.x, ACanvas.PenPos.y);
-    GEOSSolidLineTo(ACanvas, sp.x, sp.y);
+    GEOSSolidLineTo(ACanvas, AX, ACanvas.PenPos.y, ADoubleW, AAdd1W);
+    GEOSSolidLineTo(ACanvas, AX, AY, ADoubleW, AAdd1W);
+    GEOSSolidLineTo(ACanvas, sp.x, ACanvas.PenPos.y, False, False);
+    GEOSSolidLineTo(ACanvas, sp.x, sp.y, False, False);
 
-    ACanvas.PenPos:= Point(AX, AY);
+    ACanvas.PenPos:= Point(GEOSNormalizeX(AX, ADoubleW, AAdd1W), AY);
     end;
 
 procedure GEOSHorzLineTo(const ACanvas: TCanvas; const APattern: Byte;
-        const AX: Word);
+        const AX: Word; const ADoubleW: Boolean; const AAdd1W: Boolean);
     var
     xo,
     x1,
@@ -349,13 +396,13 @@ procedure GEOSHorzLineTo(const ACanvas: TCanvas; const APattern: Byte;
     x1:= ACanvas.PenPos.x;
     y:= ACanvas.PenPos.y;
 
-    if  AX < x1 then
+    x2:= GEOSNormalizeX(AX, ADoubleW, AAdd1W);
+
+    if  x2 < x1 then
         begin
-        x1:= AX;
+        x1:= x2;
         x2:= ACanvas.PenPos.x;
-        end
-    else
-        x2:= AX;
+        end;
 
     pc:= ACanvas.Pen.Color;
     bc:= ACanvas.Brush.Color;
