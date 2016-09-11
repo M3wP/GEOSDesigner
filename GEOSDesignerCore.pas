@@ -91,7 +91,7 @@ type
         constructor Create(const AIdent: string);
         destructor  Destroy; override;
 
-        property  Indentifier: string read FIdentifier;
+        property  Identifier: string read FIdentifier;
         property  System: Boolean read FSystem write FSystem;
     end;
 
@@ -270,6 +270,8 @@ type
 
     public
         constructor Create(const AIdent: string; const AType: TGEOSMenuType;
+                const ASibling: TGEOSDoMenuItem); overload;
+        constructor Create(const AIdent: string; const AType: TGEOSMenuType;
                 const AParent: TGEOSDoMenuItem;
                 const AAlign: TGEOSMenuAlignment); overload;
         constructor Create(const AIdent: string; const AType: TGEOSMenuType;
@@ -280,6 +282,9 @@ type
         function  Remove(AMenuItem: TGEOSDoMenuItem): Integer;
 
         property  Identifier: string read FIdentifier;
+
+        property  Parent: TGEOSDoMenuItem read FParent;
+        property  Element: TGEOSDoMenuElement read FElement;
 
         property  Alignment: TGEOSMenuAlignment read GetAlignment;
         property  Bounds: TRect read GetBounds write SetBounds;
@@ -786,8 +791,43 @@ procedure TGEOSDoIconsElement.PrepareData(const AStrings: TStrings);
 
 procedure TGEOSDoIconsElement.SaveToXML(const ADoc: TXMLDocument;
         const AParent: TDOMNode);
-    begin
+    var
+    it: TDOMElement;
+    cn: TDOMElement;
+    d: PGEOSIconDetails;
+    i: Integer;
 
+    begin
+    cn:= ADoc.CreateElement('details');
+    cn.SetAttribute('showMouse', IntToStr(Ord(FShowMouse)));
+    cn.SetAttribute('xPos', IntToStr(FXPos));
+    cn.SetAttribute('doubleW', IntToStr(Ord(FDoubleW)));
+    cn.SetAttribute('add1W', IntToStr(Ord(FAdd1W)));
+    cn.SetAttribute('yPos', IntToStr(FYPos));
+
+    AParent.AppendChild(cn);
+
+    cn:= ADoc.CreateElement('items');
+    cn.SetAttribute('count', IntToStr(FDetails.Count));
+
+    for i:= 0 to FDetails.Count - 1 do
+        begin
+        it:= ADoc.CreateElement('item');
+        it.SetAttribute('index', IntToSTr(i));
+
+        d:= PGEOSIconDetails(FDetails[i]);
+
+        it.SetAttribute('x', IntToStr(d^.X));
+        it.SetAttribute('y', IntToStr(d^.Y));
+        it.SetAttribute('ident', d^.Ident);
+        it.SetAttribute('icon', d^.Icon.Identifier);
+        it.SetAttribute('dblBWidth', IntToStr(Ord(d^.DblBWidth)));
+        it.SetAttribute('dblBX', IntToStr(Ord(d^.DblBX)));
+
+        cn.AppendChild(it);
+        end;
+
+    AParent.AppendChild(cn);
     end;
 
 procedure TGEOSDoIconsElement.LoadFromXML(const ASourceNode: TDOMNode);
@@ -824,6 +864,7 @@ procedure TGEOSDoIconsElement.Delete(const AIndex: Integer);
     d:= PGEOSIconDetails(FDetails[AIndex]);
     FDetails.Delete(AIndex);
     GEOSDesignerIdents.Delete(GEOSDesignerIdents.IndexOf(d^.Ident));
+    Dispose(d);
     DoChanged;
     end;
 
@@ -1201,6 +1242,36 @@ procedure TGEOSDoMenuItem.PreparePreview(const ABitmap: TBitmap);
         GEOSSetPattern(cp);
         ABitmap.Canvas.PenPos:= sp;
         end;
+    end;
+
+constructor TGEOSDoMenuItem.Create(const AIdent: string;
+        const AType: TGEOSMenuType; const ASibling: TGEOSDoMenuItem);
+    begin
+    if  not Assigned(ASibling) then
+        raise Exception.Create('A sibling menu item must be supplied.');
+
+    GEOSDesignerIdents.Add(AIdent);
+    FIdentifier:= AIdent;
+
+    FControlItem:= ASibling.FControlItem;
+
+    FAlignment:= FControlItem.FAlignment;
+    FVisible:= FControlItem.FVisible;
+    FBounds:= FControlItem.FBounds;
+
+    FMenuType:= AType;
+
+    FParent:= ASibling.FParent;
+    FElement:= ASibling.FElement;
+
+    FSubItems:= TObjectList.Create(True);
+
+    if  Assigned(FParent) then
+        FParent.FSubItems.Add(Self)
+    else
+        FElement.FItems.Add(Self);
+
+    FElement.DoChanged;
     end;
 
 constructor TGEOSDoMenuItem.Create(const AIdent: string;

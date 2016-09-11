@@ -1,8 +1,7 @@
 //------------------------------------------------------------------------------
 //DModGEOSDesignerMain
 //====================
-//Application main Data Module for the GEOS Designer application.  Controls
-//most aspects of the application behaviour.
+//Application main Data Module for the GEOS Designer application.
 //
 //
 //Copyright (C) 2016, Daniel England.
@@ -30,7 +29,7 @@ interface
 
 uses
     Contnrs, Graphics, Classes, SysUtils, FileUtil, Menus, ActnList, Forms,
-    Controls, GEOSTypes, GEOSDesignerCore, FrameGEOSDesignerMain;
+    Controls, Dialogs, GEOSTypes, GEOSDesignerCore, FrameGEOSDesignerMain;
 
 type
 
@@ -41,6 +40,7 @@ type
         ActEditAddElem: TAction;
         ActEditDelElem: TAction;
         ActFileSave: TAction;
+        ActFileSaveAs: TAction;
         ActionList1: TActionList;
         ImgLstPatterns: TImageList;
         ImgLstItems: TImageList;
@@ -54,9 +54,13 @@ type
         MenuItem6: TMenuItem;
         MenuItem7: TMenuItem;
         MenuItem8: TMenuItem;
+        MenuItem9: TMenuItem;
+        OpenDialog1: TOpenDialog;
+        SaveDialog1: TSaveDialog;
         procedure ActEditAddElemExecute(Sender: TObject);
         procedure ActEditDelElemExecute(Sender: TObject);
         procedure ActFileExitExecute(Sender: TObject);
+        procedure ActFileSaveAsExecute(Sender: TObject);
         procedure ActFileSaveExecute(Sender: TObject);
         procedure ActionList1Update(AAction: TBasicAction;
                 var Handled: Boolean);
@@ -66,6 +70,8 @@ type
         FFirstTime: Boolean;
         FDirty: Boolean;
         FProjectName: string;
+        FFileName,
+        FOldFileName: string;
         FBitmap: TBitmap;
         FElements: TObjectList;
         FIcons: TObjectList;
@@ -113,7 +119,7 @@ implementation
 {$R *.lfm}
 
 uses
-    Laz2_DOM, Laz2_XMLWrite, GEOSGraphics, Dialogs, FormGEOSDesignerNew,
+    LazFileUtils, Laz2_DOM, Laz2_XMLWrite, GEOSGraphics, FormGEOSDesignerNew,
     FormGEOSDesignerPreview, FormGEOSDesignerIconEdit,
     FormGEOSDesignerAddElem;
 
@@ -145,22 +151,77 @@ procedure TGEOSDesignerMainDMod.ActFileExitExecute(Sender: TObject);
     Application.MainForm.Close;
     end;
 
+procedure TGEOSDesignerMainDMod.ActFileSaveAsExecute(Sender: TObject);
+    begin
+    FOldFileName:= FFileName;
+    FFileName:= EmptyStr;
+    ActFileSaveExecute(Sender);
+    end;
+
 procedure TGEOSDesignerMainDMod.ActFileSaveExecute(Sender: TObject);
     var
     doc: TXMLDocument;
     rn,
     pn,
     en: TDOMNode;
-    i: Integer;
+    dn: TDOMText;
+    i,
+    j,
+    k: Integer;
+    s: string;
     e: TGEOSDesignerElement;
+    ic: TGEOSDesignerIcon;
 
     begin
+    if  FFileName = EmptyStr then
+        begin
+        SaveDialog1.FileName:= FProjectName + '.gdesign';
+
+        if  not SaveDialog1.Execute then
+            begin
+            FFileName:= FOldFileName;
+            Exit;
+            end;
+        end;
+
     doc:= TXMLDocument.Create;
     try
         rn:= doc.CreateElement('GEOSDesigner');
+        TDOMElement(rn).SetAttribute('version', '0.1');
+        TDOMElement(rn).SetAttribute('dispMode', IntToStr(Ord(GEOSDispMode)));
+
         Doc.Appendchild(rn);
 
         rn:= doc.DocumentElement;
+
+        pn:= doc.CreateElement('icons');
+        j:= 0;
+        for i:= 0 to FIcons.Count - 1 do
+            begin
+            ic:= TGEOSDesignerIcon(FIcons[i]);
+            if  not ic.System then
+                begin
+                en:= doc.CreateElement('icon');
+                TDOMElement(en).SetAttribute('index', IntToStr(j));
+                TDOMElement(en).SetAttribute('identifier', ic.Identifier);
+                TDOMElement(en).SetAttribute('datasize', IntToStr(ic.Data.Size));
+
+                s:= EmptyStr;
+                ic.Data.Position:= 0;
+                for k:= 0 to ic.Data.Size - 1 do
+                    s:= s + IntToStr(ic.Data.ReadByte) + ' ';
+
+                dn:= doc.CreateTextNode(s);
+                en.AppendChild(dn);
+
+                Inc(j);
+                pn.AppendChild(en);
+                end;
+            end;
+
+        TDOMElement(pn).SetAttribute('count', IntToStr(j));
+        rn.AppendChild(pn);
+
         pn:= doc.CreateElement('elements');
         TDOMElement(pn).SetAttribute('count', IntToStr(FElements.Count));
         pn:= rn.AppendChild(pn);
@@ -180,16 +241,23 @@ procedure TGEOSDesignerMainDMod.ActFileSaveExecute(Sender: TObject);
             pn.AppendChild(en);
             end;
 
-        WriteXMLFile(doc, 'test.gdesign');
+        WriteXMLFile(doc, SaveDialog1.FileName);
 
         finally
         doc.Free;
         end;
+
+    FDirty:= False;
+    FFileName:= SaveDialog1.FileName;
+    FOldFileName:= FFileName;
+    FProjectName:= ExtractFileNameOnly(FFileName);
+    DoSetAppTitle;
     end;
 
 procedure TGEOSDesignerMainDMod.ActionList1Update(AAction: TBasicAction;
         var Handled: Boolean);
     begin
+    ActFileSave.Enabled:= FDirty;
     ActEditAddElem.Enabled:= Assigned(FMainFrame);
     ActEditDelElem.Enabled:= Assigned(FMainFrame) and
             Assigned(FMainFrame.SelectedElem);
@@ -243,6 +311,12 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
     r: TRect;
 
     begin
+    if  not FDirty then
+        begin
+        FDirty:= True;
+        DoSetAppTitle;
+        end;
+
     DoClearBitmap;
     GEOSSystemFont.Style:= [];
 
@@ -261,8 +335,13 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
         end;
 
     if  GEOSShowMouse then
+        begin
+        if  GEOSDispMode = gdm40Column then
+            FBitmap.Canvas.Pen.Color:= clC64Blue;
+
         GEOSBitmapUp(FBitmap.Canvas, GEOSMouseXPos, GEOSMouseYPos, FMouse,
                 False, False, False, True, True);
+        end;
 
     r:= Rect(0, 0, ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width,
             ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height);

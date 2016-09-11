@@ -10,7 +10,8 @@ uses
     Forms, lazcontrols, FormGEOSDesignerMain, DModGEOSDesignerMain,
     FrameGEOSDesignerMain, FormGEOSDesignerPreview, GEOSDesignerCore,
     GEOSGraphics, FormGEOSDesignerNew, FormGEOSDesignerIconEdit, 
-FormGEOSDesignerAddElem, FormGEOSDesignerAddGPStrInstr
+FormGEOSDesignerAddElem, FormGEOSDesignerAddGPStrInstr, 
+FormGEOSDesignerAddIconItm, FormGEOSDesignerAddMenuItm
     { you can add units after this };
 
 {$R *.res}
@@ -26,6 +27,10 @@ begin
     Application.CreateForm(TGEOSDesignerAddElemForm, GEOSDesignerAddElemForm);
     Application.CreateForm(TGEOSDesignerAddGPStrInstrForm, 
         GEOSDesignerAddGPStrInstrForm);
+    Application.CreateForm(TGEOSDesignerAddIconItmForm, 
+        GEOSDesignerAddIconItmForm);
+    Application.CreateForm(TGEOSDesignerAddMenuItmForm, 
+        GEOSDesignerAddMenuItmForm);
     Application.Run;
 end.
 

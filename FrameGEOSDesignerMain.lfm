@@ -54,7 +54,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
     Height = 556
     Top = 28
     Width = 499
-    PageIndex = 2
+    PageIndex = 1
     Align = alClient
     Constraints.MinWidth = 280
     TabOrder = 2
@@ -210,17 +210,25 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           Caption = 'ToolBar2'
           Images = GEOSDesignerMainDMod.ImgLstItems
           TabOrder = 0
-          object ToolButton2: TToolButton
+          object TlBtnMenuAdd: TToolButton
             Left = 1
             Top = 2
             Caption = 'ToolButton1'
             ImageIndex = 0
+            OnClick = TlBtnMenuAddClick
           end
           object TlBtnMenuDelete: TToolButton
-            Left = 24
+            Left = 47
             Top = 2
             Caption = 'TlBtnGrphDelete'
             ImageIndex = 1
+          end
+          object TlBtnMenuAddChild: TToolButton
+            Left = 24
+            Top = 2
+            Caption = 'TlBtnMenuAddChild'
+            ImageIndex = 3
+            OnClick = TlBtnMenuAddChildClick
           end
         end
       end
@@ -295,6 +303,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Height = 19
             Top = 194
             Width = 20
+            OnChange = ChkBxDoMenuItmCnstrndChange
             TabOrder = 0
           end
           object ChkBxDoMenuItmVisible: TCheckBox
@@ -302,6 +311,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Height = 19
             Top = 226
             Width = 20
+            OnChange = ChkBxDoMenuItmVisibleChange
             TabOrder = 1
           end
           object CmbDoMenuItmAlign: TComboBox
@@ -374,6 +384,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 58
             Width = 96
             MaxValue = 199
+            OnChange = SpEdtDoMenuItmTopChange
             TabOrder = 3
           end
           object SpEdtDoMenuItmLeft: TSpinEdit
@@ -382,6 +393,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 90
             Width = 96
             MaxValue = 319
+            OnChange = SpEdtDoMenuItmLeftChange
             TabOrder = 4
           end
           object SpEdtDoMenuItmBottom: TSpinEdit
@@ -390,6 +402,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 122
             Width = 96
             MaxValue = 199
+            OnChange = SpEdtDoMenuItmBottomChange
             TabOrder = 5
           end
           object SpEdtDoMenuItmRight: TSpinEdit
@@ -398,6 +411,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Top = 154
             Width = 96
             MaxValue = 319
+            OnChange = SpEdtDoMenuItmRightChange
             TabOrder = 6
           end
         end
@@ -443,6 +457,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
             Height = 23
             Top = 72
             Width = 136
+            OnChange = EdtDoMenuItmTextChange
             TabOrder = 0
             Text = 'EdtDoMenuItmText'
           end
@@ -466,6 +481,7 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
               'Menu Action'
               'Dynamic Sub Menu'
             )
+            OnChange = CmbDoMenuItmTypeChange
             Style = csDropDownList
             TabOrder = 1
             Text = 'Sub Menu'
@@ -529,17 +545,19 @@ object GEOSDesignerMainFrame: TGEOSDesignerMainFrame
           Caption = 'ToolBar1'
           Images = GEOSDesignerMainDMod.ImgLstItems
           TabOrder = 0
-          object ToolButton3: TToolButton
+          object TlBtnIconAdd: TToolButton
             Left = 1
             Top = 2
             Caption = 'ToolButton1'
             ImageIndex = 0
+            OnClick = TlBtnIconAddClick
           end
           object TlBtnIconDelete: TToolButton
             Left = 24
             Top = 2
             Caption = 'TlBtnGrphDelete'
             ImageIndex = 1
+            OnClick = TlBtnIconDeleteClick
           end
         end
       end

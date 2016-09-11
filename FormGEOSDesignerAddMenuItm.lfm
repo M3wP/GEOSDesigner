@@ -1,0 +1,261 @@
+object GEOSDesignerAddMenuItmForm: TGEOSDesignerAddMenuItmForm
+  Left = 611
+  Height = 407
+  Top = 146
+  Width = 352
+  AutoSize = True
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Add Menu Item...'
+  ClientHeight = 407
+  ClientWidth = 352
+  Constraints.MinWidth = 352
+  OnClose = FormClose
+  Position = poMainFormCenter
+  LCLVersion = '1.6.0.4'
+  object Panel1: TPanel
+    Left = 0
+    Height = 33
+    Top = 374
+    Width = 352
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 33
+    ClientWidth = 352
+    TabOrder = 2
+    object BtnOK: TButton
+      Left = 184
+      Height = 25
+      Top = 0
+      Width = 75
+      Caption = 'OK'
+      Default = True
+      ModalResult = 1
+      TabOrder = 0
+    end
+    object BtnCancel: TButton
+      Left = 269
+      Height = 25
+      Top = 0
+      Width = 75
+      Cancel = True
+      Caption = 'Cancel'
+      ModalResult = 2
+      TabOrder = 1
+    end
+  end
+  object PnlLevelDetails: TPanel
+    Left = 0
+    Height = 232
+    Top = 0
+    Width = 352
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 232
+    ClientWidth = 352
+    TabOrder = 0
+    object ChkBxCnstrnd: TCheckBox
+      Left = 113
+      Height = 19
+      Top = 202
+      Width = 20
+      TabOrder = 5
+    end
+    object Label9: TLabel
+      Left = 8
+      Height = 15
+      Top = 36
+      Width = 59
+      Caption = 'Alignment:'
+      ParentColor = False
+    end
+    object Label10: TLabel
+      Left = 8
+      Height = 15
+      Top = 70
+      Width = 40
+      Caption = 'Bounds'
+      ParentColor = False
+    end
+    object CmbAlignment: TComboBox
+      Left = 112
+      Height = 23
+      Top = 32
+      Width = 136
+      ItemHeight = 15
+      ItemIndex = 1
+      Items.Strings = (
+        'Horizontal'
+        'Vertical'
+      )
+      Style = csDropDownList
+      TabOrder = 0
+      Text = 'Vertical'
+    end
+    object Label11: TLabel
+      Left = 56
+      Height = 15
+      Top = 70
+      Width = 24
+      Caption = 'Top:'
+      ParentColor = False
+    end
+    object Label12: TLabel
+      Left = 56
+      Height = 15
+      Top = 102
+      Width = 23
+      Caption = 'Left:'
+      ParentColor = False
+    end
+    object Label13: TLabel
+      Left = 56
+      Height = 15
+      Top = 134
+      Width = 43
+      Caption = 'Bottom:'
+      ParentColor = False
+    end
+    object Label14: TLabel
+      Left = 56
+      Height = 15
+      Top = 166
+      Width = 31
+      Caption = 'Right:'
+      ParentColor = False
+    end
+    object Label15: TLabel
+      Left = 8
+      Height = 15
+      Top = 204
+      Width = 67
+      Caption = 'Constrained:'
+      ParentColor = False
+    end
+    object SpEdtTop: TSpinEdit
+      Left = 112
+      Height = 23
+      Top = 66
+      Width = 96
+      MaxValue = 199
+      TabOrder = 1
+    end
+    object SpEdtLeft: TSpinEdit
+      Left = 112
+      Height = 23
+      Top = 98
+      Width = 96
+      MaxValue = 319
+      TabOrder = 2
+    end
+    object SpEdtBottom: TSpinEdit
+      Left = 112
+      Height = 23
+      Top = 130
+      Width = 96
+      MaxValue = 199
+      TabOrder = 3
+    end
+    object SpEdtRight: TSpinEdit
+      Left = 112
+      Height = 23
+      Top = 162
+      Width = 96
+      MaxValue = 319
+      TabOrder = 4
+    end
+    object DividerBevel1: TDividerBevel
+      Left = 4
+      Height = 15
+      Top = 4
+      Width = 344
+      Caption = 'Menu Level Settings'
+      Align = alTop
+      BorderSpacing.Left = 4
+      BorderSpacing.Top = 4
+      BorderSpacing.Right = 4
+      BorderSpacing.Bottom = 8
+      LeftIndent = 0
+      ParentFont = False
+    end
+  end
+  object Panel2: TPanel
+    Left = 0
+    Height = 142
+    Top = 232
+    Width = 352
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 142
+    ClientWidth = 352
+    TabOrder = 1
+    object Label6: TLabel
+      Left = 8
+      Height = 15
+      Top = 36
+      Width = 77
+      Caption = 'Item Identifier:'
+      ParentColor = False
+    end
+    object DividerBevel2: TDividerBevel
+      Left = 4
+      Height = 15
+      Top = 8
+      Width = 344
+      Caption = 'Menu Item Settings'
+      Align = alTop
+      BorderSpacing.Left = 4
+      BorderSpacing.Top = 8
+      BorderSpacing.Right = 4
+      LeftIndent = 0
+      ParentFont = False
+    end
+    object EdtText: TEdit
+      Left = 112
+      Height = 23
+      Top = 64
+      Width = 136
+      TabOrder = 1
+    end
+    object Label7: TLabel
+      Left = 8
+      Height = 15
+      Top = 68
+      Width = 52
+      Caption = 'Item Text:'
+      ParentColor = False
+    end
+    object CmbType: TComboBox
+      Left = 112
+      Height = 23
+      Top = 96
+      Width = 136
+      ItemHeight = 15
+      ItemIndex = 0
+      Items.Strings = (
+        'Sub Menu'
+        'Menu Action'
+        'Dynamic Sub Menu'
+      )
+      Style = csDropDownList
+      TabOrder = 2
+      Text = 'Sub Menu'
+    end
+    object Label8: TLabel
+      Left = 8
+      Height = 15
+      Top = 100
+      Width = 56
+      Caption = 'Item Type:'
+      ParentColor = False
+    end
+    object EdtIdentifier: TEdit
+      Left = 112
+      Height = 23
+      Top = 32
+      Width = 232
+      OnKeyPress = EdtIdentifierKeyPress
+      TabOrder = 0
+    end
+  end
+end

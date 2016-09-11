@@ -127,18 +127,23 @@ type
         TlBtnGrphAdd: TToolButton;
         TlBtnGrphDelete: TToolButton;
         TlBtnGrphEdit: TToolButton;
-        ToolButton2: TToolButton;
-        ToolButton3: TToolButton;
+        TlBtnMenuAddChild: TToolButton;
+        TlBtnMenuAdd: TToolButton;
+        TlBtnIconAdd: TToolButton;
         TreeVwDoMenu: TTreeView;
         procedure ChkBxDoIconsAdd1WChange(Sender: TObject);
         procedure ChkBxDoIconsDblWChange(Sender: TObject);
         procedure ChkBxDoIconsItmDblBChange(Sender: TObject);
         procedure ChkBxDoIconsItmDblWChange(Sender: TObject);
         procedure ChkBxDoIconsShowMouseChange(Sender: TObject);
+        procedure ChkBxDoMenuItmCnstrndChange(Sender: TObject);
+        procedure ChkBxDoMenuItmVisibleChange(Sender: TObject);
         procedure ChkLstBxElementsClick(Sender: TObject);
         procedure ChkLstBxElementsClickCheck(Sender: TObject);
         procedure ChkLstBxElementsItemClick(Sender: TObject; Index: integer);
         procedure CmbDoIconsIconChange(Sender: TObject);
+        procedure CmbDoMenuItmTypeChange(Sender: TObject);
+        procedure EdtDoMenuItmTextChange(Sender: TObject);
         procedure LstBxDoIconsSelectionChange(Sender: TObject; User: boolean);
         procedure LstVwGrphStrItemsResize(Sender: TObject);
         procedure LstVwGrphStrItemsSelectItem(Sender: TObject; Item: TListItem;
@@ -147,9 +152,17 @@ type
         procedure SpEdtDoIconsItmYPosChange(Sender: TObject);
         procedure SpEdtDoIconsXPosChange(Sender: TObject);
         procedure SpEdtDoIconsYPosChange(Sender: TObject);
+        procedure SpEdtDoMenuItmBottomChange(Sender: TObject);
+        procedure SpEdtDoMenuItmLeftChange(Sender: TObject);
+        procedure SpEdtDoMenuItmRightChange(Sender: TObject);
+        procedure SpEdtDoMenuItmTopChange(Sender: TObject);
         procedure TlBtnGrphAddClick(Sender: TObject);
         procedure TlBtnGrphDeleteClick(Sender: TObject);
         procedure TlBtnGrphEditClick(Sender: TObject);
+        procedure TlBtnIconAddClick(Sender: TObject);
+        procedure TlBtnIconDeleteClick(Sender: TObject);
+        procedure TlBtnMenuAddChildClick(Sender: TObject);
+        procedure TlBtnMenuAddClick(Sender: TObject);
         procedure TreeVwDoMenuSelectionChanged(Sender: TObject);
     private
         FChanging: Boolean;
@@ -180,7 +193,8 @@ implementation
 {$R *.lfm}
 
 uses
-    GEOSTypes, DModGEOSDesignerMain, FormGEOSDesignerAddGPStrInstr;
+    GEOSTypes, DModGEOSDesignerMain, FormGEOSDesignerAddGPStrInstr,
+    FormGEOSDesignerAddIconItm, FormGEOSDesignerAddMenuItm;
 
 
 { TGEOSDesignerMainFrame }
@@ -208,6 +222,32 @@ procedure TGEOSDesignerMainFrame.CmbDoIconsIconChange(Sender: TObject);
         end;
     end;
 
+procedure TGEOSDesignerMainFrame.CmbDoMenuItmTypeChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            mi.MenuType:= TGEOSMenuType(CmbDoMenuItmType.ItemIndex);
+            end;
+    end;
+
+procedure TGEOSDesignerMainFrame.EdtDoMenuItmTextChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            mi.Text:= EdtDoMenuItmText.Text;
+            end;
+    end;
+
 procedure TGEOSDesignerMainFrame.LstBxDoIconsSelectionChange(Sender: TObject;
         User: boolean);
     var
@@ -224,7 +264,12 @@ procedure TGEOSDesignerMainFrame.LstBxDoIconsSelectionChange(Sender: TObject;
             end;
 
     if  s > -1 then
+        begin
         DoDoIconsItemSelect(s);
+        TlBtnIconDelete.Enabled:= True;
+        end
+    else
+        TlBtnIconDelete.Enabled:= False;
     end;
 
 procedure TGEOSDesignerMainFrame.LstVwGrphStrItemsResize(Sender: TObject);
@@ -319,6 +364,70 @@ procedure TGEOSDesignerMainFrame.SpEdtDoIconsYPosChange(Sender: TObject);
         end;
     end;
 
+procedure TGEOSDesignerMainFrame.SpEdtDoMenuItmBottomChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+    r: TRect;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            r:= mi.Bounds;
+            r.Bottom:= SpEdtDoMenuItmBottom.Value;
+            mi.Bounds:= r;
+            end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoMenuItmLeftChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+    r: TRect;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            r:= mi.Bounds;
+            r.Left:= SpEdtDoMenuItmLeft.Value;
+            mi.Bounds:= r;
+            end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoMenuItmRightChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+    r: TRect;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            r:= mi.Bounds;
+            r.Right:= SpEdtDoMenuItmRight.Value;
+            mi.Bounds:= r;
+            end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtDoMenuItmTopChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+    r: TRect;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            r:= mi.Bounds;
+            r.Top:= SpEdtDoMenuItmTop.Value;
+            mi.Bounds:= r;
+            end;
+    end;
+
 procedure TGEOSDesignerMainFrame.TlBtnGrphAddClick(Sender: TObject);
     var
     e: TGEOSGraphicsStrElement;
@@ -356,11 +465,114 @@ procedure TGEOSDesignerMainFrame.TlBtnGrphEditClick(Sender: TObject);
     e:= FSelectedElem as TGEOSGraphicsStrElement;
     i:= LstVwGrphStrItems.Selected.Index;
 
-    if  GEOSDesignerAddGPStrInstrForm.ShowEdit(e[i]) = mrOk then
+    if  GEOSDesignerAddGPStrInstrForm.ShowEdit(e[i]) = mrOK then
         begin
         DoInitGrphStrElemView;
         GEOSDesignerMainDMod.Changed;
         end;
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnIconAddClick(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    e:= FSelectedElem as TGEOSDoIconsElement;
+
+    if  GEOSDesignerAddIconItmForm.ShowModal = mrOK then
+        begin
+        with GEOSDesignerAddIconItmForm do
+            e.Add(SpEdtIconXPos.Value, SpEdtIconYPos.Value, EdtIdentifier.Text,
+                    GEOSDesignerMainDMod.Icons[CmbIcon.ItemIndex],
+                    ChkBxIconDblW.Checked, ChkBxIconDblB.Checked);
+
+        LstBxDoIcons.Items.Add(e.IconsIdent[e.Count - 1]);
+        LstBxDoIcons.Selected[LstBxDoIcons.Count - 1]:= True;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnIconDeleteClick(Sender: TObject);
+    var
+    e: TGEOSDoIconsElement;
+
+    begin
+    e:= FSelectedElem as TGEOSDoIconsElement;
+
+    e.Delete(FSelectedItem);
+    DoInitDoIconElemView;
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnMenuAddChildClick(Sender: TObject);
+    var
+    e: TGEOSDoMenuElement;
+    mi,
+    ni: TGEOSDoMenuItem;
+    r: TRect;
+
+    begin
+    if  GEOSDesignerAddMenuItmForm.ShowAdd(True) = mrOK then
+        begin
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            e:= mi.Element;
+            end
+         else
+            begin
+            mi:= nil;
+            e:= FSelectedElem as TGEOSDoMenuElement;
+            end;
+
+        if  Assigned(mi) then
+            with GEOSDesignerAddMenuItmForm do
+                ni:= TGEOSDoMenuItem.Create(EdtIdentifier.Text,
+                        TGEOSMenuType(CmbType.ItemIndex), mi,
+                        TGEOSMenuAlignment(CmbAlignment.ItemIndex))
+        else
+            with GEOSDesignerAddMenuItmForm do
+                ni:= TGEOSDoMenuItem.Create(EdtIdentifier.Text,
+                        TGEOSMenuType(CmbType.ItemIndex), e,
+                        TGEOSMenuAlignment(CmbAlignment.ItemIndex));
+
+        with GEOSDesignerAddMenuItmForm do
+            begin
+            r.Top:= SpEdtTop.Value;
+            r.Left:= SpEdtLeft.Value;
+            r.Bottom:= SpEdtBottom.Value;
+            r.Right:= SpEdtRight.Value;
+
+            ni.Text:= EdtText.Text;
+            ni.Bounds:= r;
+            ni.Constrained:= ChkBxCnstrnd.Checked;
+            end;
+
+        DoInitDoMenuElemView;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.TlBtnMenuAddClick(Sender: TObject);
+    var
+    mi,
+    ni: TGEOSDoMenuItem;
+
+    begin
+    if  Assigned(TreeVwDoMenu.Selected) then
+        if  GEOSDesignerAddMenuItmForm.ShowAdd(False) = mrOK then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+
+            with GEOSDesignerAddMenuItmForm do
+//              if  Assigned(mi.Parent) then
+                    ni:= TGEOSDoMenuItem.Create(EdtIdentifier.Text,
+                            TGEOSMenuType(CmbType.ItemIndex), mi);
+//              else
+//                  ni:= TGEOSDoMenuItem.Create(EdtIdentifier.Text,
+//                          TGEOSMenuType(CmbType.ItemIndex), mi.Element,
+//                          mi.Alignment);
+
+            ni.Text:= GEOSDesignerAddMenuItmForm.EdtText.Text;
+            DoInitDoMenuElemView;
+            end;
     end;
 
 procedure TGEOSDesignerMainFrame.TreeVwDoMenuSelectionChanged(Sender: TObject);
@@ -372,22 +584,40 @@ procedure TGEOSDesignerMainFrame.TreeVwDoMenuSelectionChanged(Sender: TObject);
         begin
         mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
 
-        CmbDoMenuItmAlign.ItemIndex:= Ord(mi.Alignment);
+        FChanging:= True;
+        try
 
-//todo  TGEOSDesignerMainFrame.TreeVwDoMenuSelectionChanged need set max on
-//          spin controls.
+            CmbDoMenuItmAlign.ItemIndex:= Ord(mi.Alignment);
 
-        SpEdtDoMenuItmTop.Value:= mi.Bounds.Top;
-        SpEdtDoMenuItmLeft.Value:= mi.Bounds.Left;
-        SpEdtDoMenuItmBottom.Value:= mi.Bounds.Bottom;
-        SpEdtDoMenuItmRight.Value:= mi.Bounds.Right;
+            SpEdtDoMenuItmTop.Value:= mi.Bounds.Top;
+            SpEdtDoMenuItmLeft.Value:= mi.Bounds.Left;
+            SpEdtDoMenuItmBottom.Value:= mi.Bounds.Bottom;
+            SpEdtDoMenuItmRight.Value:= mi.Bounds.Right;
 
-        ChkBxDoMenuItmCnstrnd.Checked:= mi.Constrained;
-        ChkBxDoMenuItmVisible.Checked:= mi.Visible;
+            ChkBxDoMenuItmCnstrnd.Checked:= mi.Constrained;
+            ChkBxDoMenuItmVisible.Checked:= mi.Visible;
 
-        LblDoMenuItmIdent.Caption:= mi.Identifier;
-        EdtDoMenuItmText.Text:= mi.Text;
-        CmbDoMenuItmType.ItemIndex:= Ord(mi.MenuType);
+            LblDoMenuItmIdent.Caption:= mi.Identifier;
+            EdtDoMenuItmText.Text:= mi.Text;
+            CmbDoMenuItmType.ItemIndex:= Ord(mi.MenuType);
+
+            CmbDoMenuItmType.Enabled:= mi.SubItemsCount = 0;
+
+            finally
+            FChanging:= False;
+            end;
+
+        TlBtnMenuAdd.Enabled:= True;
+        TlBtnMenuDelete.Enabled:= True;
+
+        TlBtnMenuAddChild.Enabled:= (mi.MenuType = gmtSubMenu) and
+                (mi.SubItemsCount = 0);
+        end
+    else
+        begin
+        TlBtnMenuAdd.Enabled:= False;
+        TlBtnMenuDelete.Enabled:= False;
+        TlBtnMenuAddChild.Enabled:= True;
         end;
     end;
 
@@ -422,6 +652,33 @@ procedure TGEOSDesignerMainFrame.ChkBxDoIconsShowMouseChange(Sender: TObject);
         e:= FSelectedElem as TGEOSDoIconsElement;
         e.ShowMouse:= ChkBxDoIconsShowMouse.Checked;
         end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoMenuItmCnstrndChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+            mi.Constrained:= ChkBxDoMenuItmCnstrnd.Checked;
+            end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxDoMenuItmVisibleChange(Sender: TObject);
+    var
+    mi: TGEOSDoMenuItem;
+
+    begin
+    if  not FChanging then
+        if  Assigned(TreeVwDoMenu.Selected) then
+            begin
+            mi:= TGEOSDoMenuItem(TreeVwDoMenu.Selected.Data);
+//todo ChkBxDoMenuItmVisibleChange Update other levels to not visible if req'd.
+            mi.Visible:= ChkBxDoMenuItmVisible.Checked;
+            end;
     end;
 
 procedure TGEOSDesignerMainFrame.ChkBxDoIconsItmDblWChange(Sender: TObject);
@@ -490,7 +747,7 @@ procedure TGEOSDesignerMainFrame.DoDoIconsItemSelect(const AItem: Integer);
     FChanging:= True;
     try
         LblDoIconItmIdent.Caption:= e.IconsIdent[AItem];
-        CmbDoIconsIcon.ItemIndex:= CmbDoIconsIcon.Items.IndexOf(e[AItem].Indentifier);
+        CmbDoIconsIcon.ItemIndex:= CmbDoIconsIcon.Items.IndexOf(e[AItem].Identifier);
         SpEdtDoIconsItmXPos.Value:= e.IconsXPos[AItem];
         SpEdtDoIconsItmYPos.Value:= e.IconsYPos[AItem];
         ChkBxDoIconsItmDblW.Checked:= e.IconsDblBWidth[AItem];
@@ -586,6 +843,12 @@ procedure TGEOSDesignerMainFrame.DoInitDoMenuElemView;
     e:= FSelectedElem as TGEOSDoMenuElement;
 
     LblDoMenuIdent.Caption:= e.Identifier;
+
+    SpEdtDoMenuItmTop.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+    SpEdtDoMenuItmLeft.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+    SpEdtDoMenuItmBottom.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+    SpEdtDoMenuItmRight.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+
     TreeVwDoMenu.Items.BeginUpdate;
     try
         TreeVwDoMenu.Items.Clear;
@@ -606,6 +869,11 @@ procedure TGEOSDesignerMainFrame.DoInitDoMenuElemView;
     if  TreeVwDoMenu.Items.Count > 0 then
         begin
         TreeVwDoMenu.Selected:= TreeVwDoMenu.Items[0];
+        end
+    else
+        begin
+        TlBtnMenuAdd.Enabled:= False;
+        TlBtnMenuDelete.Enabled:= False;
         end;
     end;
 
@@ -655,7 +923,7 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
             CmbDoIconsIcon.Clear;
 
             for i:= 0 to GEOSDesignerMainDMod.IconsCount - 1 do
-                CmbDoIconsIcon.Items.Add(GEOSDesignerMainDMod.Icons[i].Indentifier);
+                CmbDoIconsIcon.Items.Add(GEOSDesignerMainDMod.Icons[i].Identifier);
 
             finally
             CmbDoIconsIcon.Items.EndUpdate;
@@ -666,6 +934,7 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
         SpEdtDoIconsItmXPos.Value:= 0;
         ChkBxDoIconsItmDblB.Checked:= False;
         SpEdtDoIconsItmYPos.Value:= 0;
+        LblDoIconItmIdent.Caption:= EmptyStr;
 
         finally
         FChanging:= False;
@@ -675,7 +944,10 @@ procedure TGEOSDesignerMainFrame.DoInitDoIconElemView;
         begin
         LstBxDoIcons.Selected[0]:= True;
         DoDoIconsItemSelect(0);
-        end;
+        TlBtnIconDelete.Enabled:= True;
+        end
+    else
+        TlBtnIconDelete.Enabled:= False;
     end;
 
 procedure TGEOSDesignerMainFrame.DoFindActiveElement;

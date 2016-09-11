@@ -115,7 +115,7 @@
         <PackageName Value="LCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="15">
       <Unit0>
         <Filename Value="GEOSDesigner.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -192,6 +192,19 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="FormGEOSDesignerAddIconItm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="GEOSDesignerAddIconItmForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="FormGEOSDesignerAddMenuItm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="GEOSDesignerAddMenuItmForm"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

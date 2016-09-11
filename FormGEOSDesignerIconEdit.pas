@@ -252,7 +252,7 @@ procedure TGEOSDesignerIconEditForm.InitialiseDisplay;
         LstBxIcons.Clear;
 
         for i:= 0 to GEOSDesignerMainDMod.IconsCount - 1 do
-            LstBxIcons.Items.Add(GEOSDesignerMainDMod.Icons[i].Indentifier);
+            LstBxIcons.Items.Add(GEOSDesignerMainDMod.Icons[i].Identifier);
 
         finally
         LstBxIcons.Items.EndUpdate;
