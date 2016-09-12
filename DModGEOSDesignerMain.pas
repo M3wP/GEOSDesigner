@@ -41,12 +41,19 @@ type
         ActEditDelElem: TAction;
         ActFileSave: TAction;
         ActFileSaveAs: TAction;
+        ActFileNew: TAction;
+        ActFileOpen: TAction;
+        ActProjectGenerate: TAction;
         ActionList1: TActionList;
         ImgLstPatterns: TImageList;
         ImgLstItems: TImageList;
         ImgLstGrphsStr: TImageList;
         MainMenu1: TMainMenu;
         MenuItem1: TMenuItem;
+        MenuItem10: TMenuItem;
+        MenuItem11: TMenuItem;
+        MenuItem12: TMenuItem;
+        MenuItem13: TMenuItem;
         MenuItem2: TMenuItem;
         MenuItem3: TMenuItem;
         MenuItem4: TMenuItem;
@@ -57,13 +64,17 @@ type
         MenuItem9: TMenuItem;
         OpenDialog1: TOpenDialog;
         SaveDialog1: TSaveDialog;
+        SaveDialog2: TSaveDialog;
         procedure ActEditAddElemExecute(Sender: TObject);
         procedure ActEditDelElemExecute(Sender: TObject);
         procedure ActFileExitExecute(Sender: TObject);
+        procedure ActFileNewExecute(Sender: TObject);
+        procedure ActFileOpenExecute(Sender: TObject);
         procedure ActFileSaveAsExecute(Sender: TObject);
         procedure ActFileSaveExecute(Sender: TObject);
         procedure ActionList1Update(AAction: TBasicAction;
                 var Handled: Boolean);
+        procedure ActProjectGenerateExecute(Sender: TObject);
         procedure DataModuleCreate(Sender: TObject);
         procedure DataModuleDestroy(Sender: TObject);
     private
@@ -78,10 +89,15 @@ type
         FMainFrame: TGEOSDesignerMainFrame;
         FMouse: TGEOSBitmap;
 
+        procedure DoGeneratePreview;
+        procedure DoInitProject;
+
         procedure DoOnChange;
         procedure DoOnInit;
 
         procedure DoInitSystemIcons;
+
+        procedure DoClearProject;
 
         procedure DoClearBitmap;
         procedure DoSetAppTitle;
@@ -119,18 +135,25 @@ implementation
 {$R *.lfm}
 
 uses
-    LazFileUtils, Laz2_DOM, Laz2_XMLWrite, GEOSGraphics, FormGEOSDesignerNew,
-    FormGEOSDesignerPreview, FormGEOSDesignerIconEdit,
+    LazFileUtils, Laz2_DOM, Laz2_XMLWrite, Laz2_XMLRead, GEOSGraphics,
+    FormGEOSDesignerNew, FormGEOSDesignerPreview, FormGEOSDesignerIconEdit,
     FormGEOSDesignerAddElem;
+
 
 resourcestring
     STR_CAP_GEOSMODE40COL = ' (40 Columns)';
     STR_CAP_GEOSMODE80COL = ' (80 Columns)';
     STR_CAP_GEOSMODE80DBL = ' (80 Columns, M65)';
     STR_CAP_GEOSDESIGNER = 'GEOS Designer';
-    STR_MSG_GEOSDESIGNCLSD =
-            'The current project has not been saved.'#13#10#13#10+
+    STR_MSG_GEOSDSDNDRTY =
+            'The current project has not been saved.'#13#10#13#10;
+    STR_MSG_GEOSDSGNCLSD =
             'Are you sure you wish to exit the application?';
+    STR_MSG_GEOSDSGNNEWP =
+            'Are you sure you wish to create a new project?';
+    STR_MSG_GEOSDSGNOPEN =
+            'Are you sure you wish to open another project?';
+
 
 { TGEOSDesignerMainDMod }
 
@@ -143,12 +166,158 @@ procedure TGEOSDesignerMainDMod.DataModuleCreate(Sender: TObject);
     FBitmap:= TBitmap.Create;
 
     FIcons:= TObjectList.Create(True);
-    DoInitSystemIcons;
+
+    DoSetAppTitle;
     end;
 
 procedure TGEOSDesignerMainDMod.ActFileExitExecute(Sender: TObject);
     begin
     Application.MainForm.Close;
+    end;
+
+procedure TGEOSDesignerMainDMod.ActFileNewExecute(Sender: TObject);
+    begin
+    if  FDirty then
+        if  MessageDlg(STR_CAP_GEOSDESIGNER,
+                STR_MSG_GEOSDSDNDRTY + STR_MSG_GEOSDSGNNEWP,
+                mtConfirmation, mbYesNo, -1) = mrNo then
+            Exit;
+
+    DoClearProject;
+    DoInitSystemIcons;
+
+    if  GEOSDesignerNewForm.ShowModal <> mrOk then
+        Exit;
+
+    FFileName:= EmptyStr;
+    FOldFileName:= FFileName;
+    FProjectName:= GEOSDesignerNewForm.EdtProjectName.Text;
+
+    if  GEOSDesignerNewForm.CmbMode.ItemIndex = 0 then
+        SetGEOSDispMode(gdm40Column)
+    else if  GEOSDesignerNewForm.CmbMode.ItemIndex = 1 then
+        SetGEOSDispMode(gdm80Column)
+    else
+        SetGEOSDispMode(gdm80ColM65);
+
+    DoOnInit;
+
+    if  not GEOSDesignerNewForm.ChkBxBlank.Checked then
+        begin
+        FDirty:= True;
+        DoCreateDefaultProject;
+        end
+    else
+        FDirty:= False;
+
+    DoInitProject;
+    end;
+
+procedure TGEOSDesignerMainDMod.ActFileOpenExecute(Sender: TObject);
+    var
+    doc: TXMLDocument;
+    rn,
+    pn,
+    en: TDOMElement;
+    i,
+    j,
+    k: Integer;
+    s: string;
+    ec: TGEOSDesignerElementClass;
+    e: TGEOSDesignerElement;
+    ic: TGEOSDesignerIcon;
+
+    begin
+    if  FDirty then
+        if  MessageDlg(STR_CAP_GEOSDESIGNER,
+                STR_MSG_GEOSDSDNDRTY + STR_MSG_GEOSDSGNOPEN,
+                mtConfirmation, mbYesNo, -1) = mrNo then
+            Exit;
+
+    DoClearProject;
+    DoInitSystemIcons;
+
+    if  not OpenDialog1.Execute then
+        Exit;
+
+    FFileName:= OpenDialog1.FileName;
+    FOldFileName:= FFileName;
+    FProjectName:= ExtractFileNameOnly(FFileName);
+
+    ReadXMLFile(doc, FFileName);
+    try
+        if  doc.DocumentElement.CompareName('GEOSDesigner') <> 0 then
+            raise Exception.Create('Invalid document file!');
+
+        rn:= doc.DocumentElement;
+
+        j:= StrToInt(rn.AttribStrings['dispMode']);
+        SetGEOSDispMode(TGEOSDisplayMode(j));
+
+        pn:= rn.FindNode('icons') as TDOMElement;
+        en:= pn.FirstChild as TDOMElement;
+        while Assigned(en) do
+            begin
+            ic:= TGEOSDesignerIcon.Create(en.AttribStrings['identifier']);
+
+            j:= StrToInt(en.AttribStrings['width']);
+            ic.Width:= j;
+            j:= StrToInt(en.AttribStrings['height']);
+            ic.Height:= j;
+
+            s:= en.FirstChild.NodeValue;
+            while Length(s) > 0 do
+                begin
+                j:= Pos(' ', s);
+                if  j > 0 then
+                    begin
+                    k:= StrToInt(Copy(s, 1, j - 1));
+                    ic.Data.WriteByte(k);
+                    s:= Copy(s, j + 1, MaxInt);
+                    end
+                else
+                    s:= EmptyStr;
+                end;
+
+            FIcons.Add(ic);
+
+            en:= en.NextSibling as TDOMElement;
+            end;
+
+        pn:= rn.FindNode('elements') as TDOMElement;
+        en:= pn.FirstChild as TDOMElement;
+        while Assigned(en) do
+            begin
+            s:= en.AttribStrings['name'];
+            for i:= 0 to GEOSDesignerElements.Count - 1 do
+                begin
+                ec:= TGEOSDesignerElementClass(GEOSDesignerElements[i]);
+                if  CompareText(ec.ElementName, s) = 0 then
+                    Break
+                else
+                    ec:= nil;
+                end;
+
+            if  Assigned(ec) then
+                begin
+                e:= ec.Create(en.AttribStrings['identifier']);
+                e.LoadFromXML(en);
+
+                j:= StrToInt(en.AttribStrings['active']);
+                e.Active:= Boolean(j);
+
+                FElements.Add(e);
+                end;
+
+            en:= en.NextSibling as TDOMElement;
+            end;
+
+        finally
+        doc.Free;
+        end;
+
+    DoOnInit;
+    DoInitProject;
     end;
 
 procedure TGEOSDesignerMainDMod.ActFileSaveAsExecute(Sender: TObject);
@@ -187,7 +356,7 @@ procedure TGEOSDesignerMainDMod.ActFileSaveExecute(Sender: TObject);
     doc:= TXMLDocument.Create;
     try
         rn:= doc.CreateElement('GEOSDesigner');
-        TDOMElement(rn).SetAttribute('version', '0.1');
+        TDOMElement(rn).SetAttribute('version', '0.2');
         TDOMElement(rn).SetAttribute('dispMode', IntToStr(Ord(GEOSDispMode)));
 
         Doc.Appendchild(rn);
@@ -204,6 +373,8 @@ procedure TGEOSDesignerMainDMod.ActFileSaveExecute(Sender: TObject);
                 en:= doc.CreateElement('icon');
                 TDOMElement(en).SetAttribute('index', IntToStr(j));
                 TDOMElement(en).SetAttribute('identifier', ic.Identifier);
+                TDOMElement(en).SetAttribute('width', IntToStr(ic.Width));
+                TDOMElement(en).SetAttribute('height', IntToStr(ic.Height));
                 TDOMElement(en).SetAttribute('datasize', IntToStr(ic.Data.Size));
 
                 s:= EmptyStr;
@@ -261,6 +432,77 @@ procedure TGEOSDesignerMainDMod.ActionList1Update(AAction: TBasicAction;
     ActEditAddElem.Enabled:= Assigned(FMainFrame);
     ActEditDelElem.Enabled:= Assigned(FMainFrame) and
             Assigned(FMainFrame.SelectedElem);
+    ActProjectGenerate.Enabled:= Length(FProjectName) > 0;
+    end;
+
+procedure TGEOSDesignerMainDMod.ActProjectGenerateExecute(Sender: TObject);
+    var
+    s: TStringList;
+    i: Integer;
+    ico: TGEOSDesignerIcon;
+
+    procedure HexDumpStream(const AStream: TStream; const AStrings: TStrings);
+        var
+        i: Integer;
+        s: string;
+        b: Byte;
+
+        begin
+        i:= 0;
+        s:= #9#9'.byte'#9;
+        while AStream.Position < AStream.Size do
+            begin
+            if  (i > 0)
+            and (i mod 16 = 0) then
+                begin
+                AStrings.Add(s);
+                i:= 0;
+                s:= #9#9'.byte'#9;
+                end;
+
+            b:= AStream.ReadByte;
+            s:= s + Format('$%2.2x, ', [b]);
+
+            Inc(i);
+            end;
+
+        if  i > 0 then
+            AStrings.Add(s);
+        end;
+
+    begin
+    if  SaveDialog2.Execute then
+        begin
+        s:= TStringList.Create;
+        try
+            for i:= 0 to FElements.Count - 1 do
+                TGEOSDesignerElement(FElements[i]).PrepareCodeInit(s);
+
+            for i:= 0 to FElements.Count - 1 do
+                TGEOSDesignerElement(FElements[i]).PrepareCode(s);
+
+            for i:= 0 to FElements.Count - 1 do
+                TGEOSDesignerElement(FElements[i]).PrepareData(s);
+
+            for i:= 0 to FIcons.Count - 1 do
+                begin
+                ico:= TGEOSDesignerIcon(FIcons[i]);
+                if  ico.RefCount > 0 then
+                    begin
+                    s.Add(ico.Identifier + ':');
+                    ico.Data.Position:= 0;
+                    HexDumpStream(ico.Data, s);
+                    end;
+
+                s.Add(EmptyStr);
+                end;
+
+            s.SaveToFile(SaveDialog2.FileName);
+
+            finally
+            s.Free;
+            end;
+        end;
     end;
 
 procedure TGEOSDesignerMainDMod.ActEditAddElemExecute(Sender: TObject);
@@ -305,11 +547,6 @@ procedure TGEOSDesignerMainDMod.DataModuleDestroy(Sender: TObject);
     end;
 
 procedure TGEOSDesignerMainDMod.DoOnChange;
-    var
-    e: TGEOSDesignerElement;
-    i: Integer;
-    r: TRect;
-
     begin
     if  not FDirty then
         begin
@@ -317,6 +554,16 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
         DoSetAppTitle;
         end;
 
+    DoGeneratePreview;
+    end;
+
+procedure TGEOSDesignerMainDMod.DoGeneratePreview;
+    var
+    r: TRect;
+    i: Integer;
+    e: TGEOSDesignerElement;
+
+    begin
     DoClearBitmap;
     GEOSSystemFont.Style:= [];
 
@@ -350,6 +597,25 @@ procedure TGEOSDesignerMainDMod.DoOnChange;
             FBitmap.Canvas, r);
     end;
 
+procedure TGEOSDesignerMainDMod.DoInitProject;
+    begin
+    DoSetAppTitle;
+
+    GEOSDesignerOnInit:= @DoOnInit;
+    GEOSDesignerOnChange:= @DoOnChange;
+
+    GEOSDesignerPreviewForm.Show;
+    GEOSDesignerIconEditForm.Show;
+
+    if  not Assigned(FMainFrame) then
+        FMainFrame:= TGEOSDesignerMainFrame.Create(Self);
+    FMainFrame.Parent:= Application.MainForm;
+    FMainFrame.Align:= alClient;
+
+    FMainFrame.InitialiseDisplay;
+    DoGeneratePreview;
+    end;
+
 procedure TGEOSDesignerMainDMod.DoOnInit;
     begin
     GEOSDesignerPreviewForm.InitialiseDisplay;
@@ -377,11 +643,40 @@ procedure TGEOSDesignerMainDMod.DoInitSystemIcons;
     DoSetupSysIcon('IconOpen', ARR_VAL_GEOSSYSICOOPEN);
     DoSetupSysIcon('IconDisk', ARR_VAL_GEOSSYSICODISK);
 
-    FMouse:= TGEOSBitmap.Create;
-    FMouse.Width:= 8;
-    FMouse.Height:= 8;
-    FMouse.Data.WriteBuffer(ARR_VAL_GEOSSYSMOUSE[0],
-            SizeOf(ARR_VAL_GEOSSYSMOUSE));
+    if  not Assigned(FMouse) then
+        begin
+        FMouse:= TGEOSBitmap.Create;
+        FMouse.Width:= 8;
+        FMouse.Height:= 8;
+        FMouse.Data.WriteBuffer(ARR_VAL_GEOSSYSMOUSE[0],
+                SizeOf(ARR_VAL_GEOSSYSMOUSE));
+        end;
+    end;
+
+procedure TGEOSDesignerMainDMod.DoClearProject;
+    begin
+    FFileName:= EmptyStr;
+    FOldFileName:= FFileName;
+    FProjectName:= FFileName;
+    FDirty:= False;
+    SetGEOSDispMode(gdm40Column);
+
+    DoSetAppTitle;
+
+    GEOSDesignerOnInit:= nil;
+    GEOSDesignerOnChange:= nil;
+
+    GEOSDesignerPreviewForm.Visible:= False;
+    GEOSDesignerIconEditForm.Visible:= False;
+
+    if  Assigned(FMainFrame) then
+        begin
+        FMainFrame.Parent:= nil;
+        FreeAndNil(FMainFrame);
+        end;
+
+    FElements.Clear;
+    FIcons.Clear;
     end;
 
 procedure TGEOSDesignerMainDMod.DoClearBitmap;
@@ -414,20 +709,26 @@ procedure TGEOSDesignerMainDMod.DoSetAppTitle;
     s: string;
 
     begin
-    if  FDirty then
-        s:= '*'
-    else
-        s:= EmptyStr;
+    if  Length(FProjectName) > 0 then
+        begin
+        if  FDirty then
+            s:= '*'
+        else
+            s:= EmptyStr;
 
-    s:= s + FProjectName;
-    if  GEOSDesignerNewForm.CmbMode.ItemIndex = 0 then
-        s:= s + STR_CAP_GEOSMODE40COL
-    else if GEOSDesignerNewForm.CmbMode.ItemIndex = 1 then
-        s:= s + STR_CAP_GEOSMODE80COL
-    else
-        s:= s + STR_CAP_GEOSMODE80DBL;
+        s:= s + FProjectName;
+        if  GEOSDesignerNewForm.CmbMode.ItemIndex = 0 then
+            s:= s + STR_CAP_GEOSMODE40COL
+        else if GEOSDesignerNewForm.CmbMode.ItemIndex = 1 then
+            s:= s + STR_CAP_GEOSMODE80COL
+        else
+            s:= s + STR_CAP_GEOSMODE80DBL;
 
-    s:= s + ' - ' + STR_CAP_GEOSDESIGNER;
+        s:= s + ' - ' + STR_CAP_GEOSDESIGNER;
+        end
+    else
+        s:= STR_CAP_GEOSDESIGNER;
+
     Application.Title:= s;
     Application.MainForm.Caption:= s;
     end;
@@ -478,10 +779,10 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
     e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_MOVETO, [0, 0, 0, 0]);
     e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_NEWPTN, [2]);
 
-    wl:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width and $00FF;
-    wh:= (ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width and $FF00) shr 8;
-    hl:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height and $00FF;
-    hh:= (ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height and $FF00) shr 8;
+    wl:= (ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1) and $00FF;
+    wh:= ((ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1) and $FF00) shr 8;
+    hl:= (ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1) and $00FF;
+    hh:= ((ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1) and $FF00) shr 8;
     e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_RECTTO, [wl, wh, hl, hh]);
 
     FElements.Add(e);
@@ -586,57 +887,14 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
 procedure TGEOSDesignerMainDMod.OnMainShow;
     begin
     if  FFirstTime then
-        begin
-        if  GEOSDesignerNewForm.ShowModal <> mrOk then
-            begin
-            Application.Terminate;
-            Application.MainForm.Visible:= False;
-            Exit;
-            end;
-
-        FProjectName:= GEOSDesignerNewForm.EdtProjectName.Text;
-
-        if  GEOSDesignerNewForm.CmbMode.ItemIndex = 0 then
-            SetGEOSDispMode(gdm40Column)
-        else if  GEOSDesignerNewForm.CmbMode.ItemIndex = 1 then
-            SetGEOSDispMode(gdm80Column)
-        else
-            SetGEOSDispMode(gdm80ColM65);
-
-        DoOnInit;
-
-        if  not GEOSDesignerNewForm.ChkBxBlank.Checked then
-            begin
-            FDirty:= True;
-            DoCreateDefaultProject;
-            end
-        else
-            FDirty:= False;
-
-        DoSetAppTitle;
-
-        GEOSDesignerOnInit:= @DoOnInit;
-        GEOSDesignerOnChange:= @DoOnChange;
-
-        GEOSDesignerPreviewForm.Show;
-        GEOSDesignerIconEditForm.Show;
-
-        if  not Assigned(FMainFrame) then
-            FMainFrame:= TGEOSDesignerMainFrame.Create(Self);
-        FMainFrame.Parent:= Application.MainForm;
-        FMainFrame.Align:= alClient;
-
-        FMainFrame.InitialiseDisplay;
-        DoOnChange;
-
         FFirstTime:= False;
-        end;
     end;
 
 procedure TGEOSDesignerMainDMod.OnMainClose(var ACloseAction: TCloseAction);
     begin
     if  FDirty then
-        if  MessageDlg(STR_CAP_GEOSDESIGNER, STR_MSG_GEOSDESIGNCLSD,
+        if  MessageDlg(STR_CAP_GEOSDESIGNER,
+                STR_MSG_GEOSDSDNDRTY + STR_MSG_GEOSDSGNCLSD,
                 mtConfirmation, mbYesNo, -1) = mrNo then
             begin
             ACloseAction:= caNone;

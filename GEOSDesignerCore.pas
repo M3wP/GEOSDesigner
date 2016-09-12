@@ -64,6 +64,7 @@ type
         class function ElementName: string; virtual; abstract;
 
         procedure PreparePreview(const ABitmap: TBitmap); virtual; abstract;
+        procedure PrepareCodeInit(const AStrings: TStrings); virtual; abstract;
         procedure PrepareCode(const AStrings: TStrings); virtual; abstract;
         procedure PrepareData(const AStrings: TStrings); virtual; abstract;
 
@@ -86,13 +87,18 @@ type
     protected
         FIdentifier: string;
         FSystem: Boolean;
+        FRefCount: Integer;
 
     public
         constructor Create(const AIdent: string);
         destructor  Destroy; override;
 
+        procedure IncrementRef;
+        procedure DecrementRef;
+
         property  Identifier: string read FIdentifier;
         property  System: Boolean read FSystem write FSystem;
+        property  RefCount: Integer read FRefCount;
     end;
 
 //------------------------------------------------------------------------------
@@ -147,24 +153,24 @@ const
 
     ARR_LIT_GEOSGRPHSTRCMDS: array[0..27] of string = (
         '',                                 //    0,
-        'MoveTo',                           //    VAL_CMD_GEOSGSTR_MOVETO = 1;
+        'MovePenTo',                        //    VAL_CMD_GEOSGSTR_MOVETO = 1;
         'LineTo',                           //    VAL_CMD_GEOSGSTR_LINETO = 2;
         'RectangleTo',                      //    VAL_CMD_GEOSGSTR_RECTTO = 3;
         '',                                 //    4,
         'NewPattern',                       //    VAL_CMD_GEOSGSTR_NEWPTN = 5;
-        'EscPutString',                     //    VAL_CMD_GEOSGSTR_ESCPTS = 6;
-        'FrameRectTo',                      //    VAL_CMD_GEOSGSTR_FMRECT = 7;
+        'Esc_PutString',                    //    VAL_CMD_GEOSGSTR_ESCPTS = 6;
+        'Frame_RecTo',                      //    VAL_CMD_GEOSGSTR_FMRECT = 7;
 
         'BackSpace',                        //    VAL_CMD_GEOSPSTR_BAKSPC = 8;
         'ForwardSpace',                     //    VAL_CMD_GEOSPSTR_FWDSPC = 9;
-        'LineFeed',                         //    VAL_CMD_GEOSPSTR_LNFEED = 10;
+        'LF',                               //    VAL_CMD_GEOSPSTR_LNFEED = 10;
         'Home',                             //    VAL_CMD_GEOSPSTR_HOMEPS = 11;
         'UpLine',                           //    VAL_CMD_GEOSPSTR_UPLINE = 12;
-        'CarriageReturn',                   //    VAL_CMD_GEOSPSTR_CRRTRN = 13;
+        'CR',                               //    VAL_CMD_GEOSPSTR_CRRTRN = 13;
         'UnderlineOn',                      //    VAL_CMD_GEOSPSTR_UNDLON = 14;
         'UnderlineOff',                     //    VAL_CMD_GEOSPSTR_UNDLOF = 15;
-        'EscGraphString',                   //    VAL_CMD_GEOSPSTR_ESCGRP = 16,
-        'EscRuler',                         //    VAL_CMD_GEOSPSTR_ESCRLR = 17;
+        'Esc_Graphics',                     //    VAL_CMD_GEOSPSTR_ESCGRP = 16,
+        'Esc_Ruler',                        //    VAL_CMD_GEOSPSTR_ESCRLR = 17;
         'ReverseOn',                        //    VAL_CMD_GEOSPSTR_REVSON = 18;
         'ReverseOff',                       //    VAL_CMD_GEOSPSTR_REVSOF = 19;
         'GotoX',                            //    VAL_CMD_GEOSPSTR_GOTOXP = 20;
@@ -172,9 +178,12 @@ const
         'GotoXY',                           //    VAL_CMD_GEOSPSTR_GOTOXY = 22;
         'NewCardset',                       //    VAL_CMD_GEOSPSTR_NEWFNT = 23;
         'BoldOn',                           //    VAL_CMD_GEOSPSTR_BOLDON = 24;
-        'ItalicsOn',                        //    VAL_CMD_GEOSPSTR_ITLCON = 25;
+        'ItalicOn',                         //    VAL_CMD_GEOSPSTR_ITLCON = 25;
         'OutlineOn',                        //    VAL_CMD_GEOSPSTR_OUTLON = 26;
         'PlainText');                       //    VAL_CMD_GEOSPSTR_PLNTXT = 27;
+
+    LIT_CMD_GEOSPSTR_USELST = 'UseLast';
+    LIT_CMD_GEOSPSTR_SHRTCT = 'ShortCut';
                                             //    VAL_CMD_GEOSPSTR_PUTSTR = $FF;
 
 type
@@ -204,6 +213,7 @@ type
         class function ElementName: string; override;
 
         procedure PreparePreview(const ABitmap: TBitmap); override;
+        procedure PrepareCodeInit(const AStrings: TStrings); override;
         procedure PrepareCode(const AStrings: TStrings); override;
         procedure PrepareData(const AStrings: TStrings); override;
 
@@ -224,6 +234,8 @@ type
         constructor Create(const AIdent: string); override;
 
         class function ElementName: string; override;
+
+        procedure PrepareCodeInit(const AStrings: TStrings); override;
     end;
 
 
@@ -319,6 +331,7 @@ type
         class function ElementName: string; override;
 
         procedure PreparePreview(const ABitmap: TBitmap); override;
+        procedure PrepareCodeInit(const AStrings: TStrings); override;
         procedure PrepareCode(const AStrings: TStrings); override;
         procedure PrepareData(const AStrings: TStrings); override;
 
@@ -388,6 +401,7 @@ type
         class function ElementName: string; override;
 
         procedure PreparePreview(const ABitmap: TBitmap); override;
+        procedure PrepareCodeInit(const AStrings: TStrings); override;
         procedure PrepareCode(const AStrings: TStrings); override;
         procedure PrepareData(const AStrings: TStrings); override;
 
@@ -436,7 +450,7 @@ var
 implementation
 
 uses
-    GEOSGraphics, GEOSFont;
+    GEOSGraphics, GEOSFont, DModGEOSDesignerMain;
 
 const
     LIT_CAP_GEOSELEMGRPHSTR = 'GraphicsString';
@@ -579,6 +593,13 @@ constructor TGEOSPutStringElement.Create(const AIdent: string);
 class function TGEOSPutStringElement.ElementName: string;
     begin
     Result:= LIT_CAP_GEOSELEMPUTSTRG;
+    end;
+
+procedure TGEOSPutStringElement.PrepareCodeInit(const AStrings: TStrings);
+    begin
+    AStrings.Add(#9#9'LoadW'#9'r0, ' + FIdentifier);
+    AStrings.Add(#9#9'jsr'#9'PutString');
+    AStrings.Add(EmptyStr);
     end;
 
 
@@ -751,7 +772,10 @@ destructor TGEOSDoIconsElement.Destroy;
     for i:= FDetails.Count - 1 downto 0 do
         begin
         d:= PGEOSIconDetails(FDetails[i]);
+
+        d^.Icon.DecrementRef;
         GEOSDesignerIdents.Delete(GEOSDesignerIdents.IndexOf(d^.Ident));
+
         Dispose(d);
         end;
 
@@ -779,14 +803,72 @@ procedure TGEOSDoIconsElement.PreparePreview(const ABitmap: TBitmap);
         end;
     end;
 
-procedure TGEOSDoIconsElement.PrepareCode(const AStrings: TStrings);
+procedure TGEOSDoIconsElement.PrepareCodeInit(const AStrings: TStrings);
     begin
+    AStrings.Add(#9#9'LoadW'#9'r0, ' + FIdentifier);
+    AStrings.Add(#9#9'jsr'#9 + 'DoIcons');
+    AStrings.Add(EmptyStr);
+    end;
 
+procedure TGEOSDoIconsElement.PrepareCode(const AStrings: TStrings);
+    var
+    i: Integer;
+    d: PGEOSIconDetails;
+
+    begin
+    for i:= 0 to FDetails.Count - 1 do
+        begin
+        d:= PGEOSIconDetails(FDetails[i]);
+        AStrings.Add(d^.Ident + ':');
+        AStrings.Add(#9#9'rts');
+        AStrings.Add(EmptyStr);
+        end;
     end;
 
 procedure TGEOSDoIconsElement.PrepareData(const AStrings: TStrings);
-    begin
+    var
+    i: Integer;
+    d: PGEOSIconDetails;
+    s: string;
 
+    begin
+    AStrings.Add(FIdentifier + ':');
+    AStrings.Add(#9#9'.byte'#9'$' + IntToHex(FDetails.Count, 2));
+
+    s:= #9#9'.word'#9'$' + IntToHex(FXPos, 4);
+    if  FDoubleW then
+        s:= s + ' | DOUBLE_W';
+    if  FAdd1W then
+        s:= s + ' | ADD1_W';
+
+    AStrings.Add(s);
+
+    AStrings.Add(#9#9'.byte'#9'$' + IntToHex(FYPos, 2));
+
+    for i:= 0 to FDetails.Count - 1 do
+        begin
+        d:= PGEOSIconDetails(FDetails[i]);
+
+        AStrings.Add(#9#9'.word'#9 + d^.Icon.Identifier);
+
+        s:= #9#9'.byte'#9'$' + IntToHex(d^.X, 2);
+        if  d^.DblBX then
+            s:= s + ' | DOUBLE_B';
+        AStrings.Add(s);
+
+        AStrings.Add(#9#9'.byte'#9'$' + IntToHex(d^.Y, 2));
+
+        s:= #9#9'.byte'#9'$' + IntToHex(d^.Icon.Width div 8, 2);
+        if  d^.DblBWidth then
+            s:= s + ' | DOUBLE_B';
+        AStrings.Add(s);
+
+        AStrings.Add(#9#9'.byte'#9'$' + IntToHex(d^.Icon.Height, 2));
+
+        AStrings.Add(#9#9'.word'#9 + d^.Ident);
+        end;
+
+    AStrings.Add(EmptyStr);
     end;
 
 procedure TGEOSDoIconsElement.SaveToXML(const ADoc: TXMLDocument;
@@ -831,8 +913,60 @@ procedure TGEOSDoIconsElement.SaveToXML(const ADoc: TXMLDocument;
     end;
 
 procedure TGEOSDoIconsElement.LoadFromXML(const ASourceNode: TDOMNode);
-    begin
+    var
+    it: TDOMElement;
+    cn: TDOMElement;
+    d: PGEOSIconDetails;
+    i,
+    j: Integer;
+    ico: TGEOSDesignerIcon;
+    s: string;
 
+    begin
+    cn:= ASourceNode.FindNode('details') as TDOMElement;
+
+    j:= StrToInt(cn.AttribStrings['showMouse']);
+    FShowMouse:= Boolean(j);
+    FXPos:= StrToInt(cn.AttribStrings['xPos']);
+    j:= StrToInt(cn.AttribStrings['doubleW']);
+    FDoubleW:= Boolean(j);
+    j:= StrToInt(cn.AttribStrings['add1W']);
+    FAdd1W:= Boolean(j);
+    FYPos:= StrToInt(cn.AttribStrings['yPos']);
+
+    cn:= ASourceNode.FindNode('items') as TDOMElement;
+    it:= cn.FirstChild as TDOMElement;
+    while Assigned(it) do
+        begin
+        New(d);
+
+        d^.X:= StrToInt(it.AttribStrings['x']);
+        d^.Y:= StrToInt(it.AttribStrings['y']);
+        d^.Ident:= it.AttribStrings['ident'];
+
+        GEOSDesignerIdents.Add(d^.Ident);
+        FDetails.Add(d);
+
+        s:= it.AttribStrings['icon'];
+        ico:= nil;
+        for i:= 0 to GEOSDesignerMainDMod.IconsCount - 1 do
+            if  CompareText(s, GEOSDesignerMainDMod.Icons[i].Identifier) = 0 then
+                begin
+                ico:= GEOSDesignerMainDMod.Icons[i];
+                Break;
+                end;
+
+        if  not Assigned(ico) then
+            raise Exception.Create('Unknown icon reference found in save file!');
+
+        d^.Icon:= ico;
+        d^.Icon.IncrementRef;
+
+        d^.DblBWidth:= Boolean(StrToInt(it.AttribStrings['dblBWidth']));
+        d^.DblBX:= Boolean(StrToInt(it.AttribStrings['dblBX']));
+
+        it:= it.NextSibling as TDOMElement;
+        end;
     end;
 
 procedure TGEOSDoIconsElement.Add(const AX, AY: Word; const AIdent: string;
@@ -853,6 +987,9 @@ procedure TGEOSDoIconsElement.Add(const AX, AY: Word; const AIdent: string;
     d^.DblBX:= ADblX;
 
     FDetails.Add(d);
+
+    AIcon.IncrementRef;
+
     DoChanged;
     end;
 
@@ -863,7 +1000,10 @@ procedure TGEOSDoIconsElement.Delete(const AIndex: Integer);
     begin
     d:= PGEOSIconDetails(FDetails[AIndex]);
     FDetails.Delete(AIndex);
+
+    d^.Icon.DecrementRef;
     GEOSDesignerIdents.Delete(GEOSDesignerIdents.IndexOf(d^.Ident));
+
     Dispose(d);
     DoChanged;
     end;
@@ -883,6 +1023,18 @@ destructor TGEOSDesignerIcon.Destroy;
     GEOSDesignerIdents.Delete(GEOSDesignerIdents.IndexOf(FIdentifier));
 
     inherited Destroy;
+    end;
+
+procedure TGEOSDesignerIcon.IncrementRef;
+    begin
+    Inc(FRefCount);
+    end;
+
+procedure TGEOSDesignerIcon.DecrementRef;
+    begin
+    Dec(FRefCount);
+    if  FRefCount < 0 then
+        FRefCount:= 0;
     end;
 
 { TGEOSDoMenuElement }
@@ -964,14 +1116,125 @@ procedure TGEOSDoMenuElement.PreparePreview(const ABitmap: TBitmap);
     GEOSSystemFont.SetStyle(ss);
     end;
 
-procedure TGEOSDoMenuElement.PrepareCode(const AStrings: TStrings);
+procedure TGEOSDoMenuElement.PrepareCodeInit(const AStrings: TStrings);
     begin
+    AStrings.Add(#9#9'LoadW'#9'r0, ' + FIdentifier);
+    AStrings.Add(#9#9'jsr'#9 + 'DoMenu');
+    AStrings.Add(EmptyStr);
+    end;
 
+procedure TGEOSDoMenuElement.PrepareCode(const AStrings: TStrings);
+    procedure DoRecurseItems(const AItems: TObjectList);
+        var
+        i: Integer;
+        itm: TGEOSDoMenuItem;
+
+        begin
+        for i:= 0 to AItems.Count - 1 do
+            begin
+            itm:= TGEOSDoMenuItem(AItems[i]);
+
+            if  itm.MenuType in [gmtMenuAction, gmtDynamicSubMenu] then
+                begin
+                AStrings.Add(itm.FIdentifier + ':');
+                AStrings.Add(#9#9'jsr'#9'GotoFirstMenu');
+                AStrings.Add(#9#9'rts');
+                AStrings.Add(EmptyStr);
+                end;
+
+            if  itm.FSubItems.Count > 0 then
+                DoRecurseItems(itm.FSubItems);
+            end;
+        end;
+
+    begin
+    DoRecurseItems(FItems);
     end;
 
 procedure TGEOSDoMenuElement.PrepareData(const AStrings: TStrings);
-    begin
+    var
+    mt: Integer;
 
+    procedure DoRecurseItems(const AItems: TObjectList; const ALabel: string);
+        var
+        i: Integer;
+        itm: TGEOSDoMenuItem;
+        s: string;
+
+        begin
+        for i:= 0 to AItems.Count - 1 do
+            begin
+            itm:= TGEOSDoMenuItem(AItems[i]);
+
+            if  i = 0 then
+                begin
+                AStrings.Add(ALabel + ':');
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm.FBounds.Top, 2));
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm.FBounds.Bottom, 2));
+                AStrings.Add(#9#9'.word'#9'$' + IntToHex(itm.FBounds.Left, 4));
+                AStrings.Add(#9#9'.word'#9'$' + IntToHex(itm.FBounds.Right, 4));
+                if  itm.FAlignment = gmaHorizontal then
+                    s:= 'HORIZONTAL'
+                else
+                    s:= 'VERTICAL';
+                if  itm.FConstrained then
+                    s:= s + ' | CONSTRAINED';
+
+                AStrings.Add(#9#9'.byte'#9 + IntToHex(AItems.Count, 2)+' | '+s);
+                end;
+
+            s:= FIdentifier + IntToStr(mt);
+            Inc(mt);
+            AStrings.Add(#9#9'.word'#9 + s);
+
+            if  itm.FMenuType = gmtSubMenu then
+                s:= 'SUB_MENU'
+            else if itm.FMenuType = gmtDynamicSubMenu then
+                s:= 'DYN_SUB_MENU'
+            else
+                s:= 'MENU_ACTION';
+            AStrings.Add(#9#9'.byte'#9 + s);
+
+            AStrings.Add(#9#9'.word'#9 + itm.FIdentifier);
+            end;
+
+        for i:= 0 to AItems.Count - 1 do
+            begin
+            itm:= TGEOSDoMenuItem(AItems[i]);
+
+            if  itm.MenuType = gmtSubMenu then
+                DoRecurseItems(itm.FSubItems, itm.FIdentifier);
+            end;
+        end;
+
+    procedure DoRecurseText(const AItems: TObjectList);
+        var
+        i: Integer;
+        itm: TGEOSDoMenuItem;
+
+        begin
+        for i:= 0 to AItems.Count - 1 do
+            begin
+            itm:= TGEOSDoMenuItem(AItems[i]);
+            AStrings.Add(FIdentifier + IntToStr(mt) + ':');
+            Inc(mt);
+            AStrings.Add(#9#9'.byte'#9'"' + itm.FText + '", $00');
+            end;
+
+        for i:= 0 to AItems.Count - 1 do
+            begin
+            itm:= TGEOSDoMenuItem(AItems[i]);
+            if  itm.FSubItems.Count > 0 then
+                DoRecurseText(itm.FSubItems);
+            end;
+        end;
+
+    begin
+    mt:= 0;
+    DoRecurseItems(FItems, FIdentifier);
+    mt:= 0;
+    DoRecurseText(FItems);
+    AStrings.Add(EmptyStr);
     end;
 
 procedure TGEOSDoMenuElement.SaveToXML(const ADoc: TXMLDocument;
@@ -1041,8 +1304,76 @@ procedure TGEOSDoMenuElement.SaveToXML(const ADoc: TXMLDocument;
     end;
 
 procedure TGEOSDoMenuElement.LoadFromXML(const ASourceNode: TDOMNode);
-    begin
+    var
+    cn: TDOMElement;
 
+    procedure DoRecurseItems(AItemNode: TDOMElement; AParent: TGEOSDoMenuItem);
+        var
+        i,
+        j: Integer;
+        it,
+        dn: TDOMElement;
+        itm0,
+        itm: TGEOSDoMenuItem;
+        s: string;
+        mt: TGEOSMenuType;
+        a: TGEOSMenuAlignment;
+        r: TRect;
+
+        begin
+        i:= 0;
+        itm0:= nil;
+        it:= AItemNode.FirstChild as TDOMElement;
+        while Assigned(it) do
+            begin
+            s:= it.AttribStrings['identifier'];
+            j:= StrToInt(it.AttribStrings['menutype']);
+            mt:= TGEOSMenuType(j);
+
+            if  i = 0 then
+                begin
+                dn:= it.FindNode('control') as TDOMElement;
+                j:= StrToInt(dn.AttribStrings['alignment']);
+                a:= TGEOSMenuAlignment(j);
+
+                if  Assigned(AParent) then
+                    itm0:= TGEOSDoMenuItem.Create(s, mt, AParent, a)
+                else
+                    itm0:= TGEOSDoMenuItem.Create(s, mt, Self, a);
+
+                j:= StrToInt(dn.AttribStrings['constrained']);
+                itm0.Constrained:= Boolean(j);
+
+                j:= StrToInt(dn.AttribStrings['visible']);
+                itm0.Visible:= Boolean(j);
+
+                dn:= dn.FindNode('bounds') as TDOMElement;
+                r.Top:= StrToInt(dn.AttribStrings['top']);
+                r.Left:= StrToInt(dn.AttribStrings['left']);
+                r.Bottom:= StrToInt(dn.AttribStrings['bottom']);
+                r.Right:= StrToInt(dn.AttribStrings['right']);
+
+                itm0.Bounds:= r;
+                itm:= itm0;
+                end
+            else
+                itm:= TGEOSDoMenuItem.Create(s, mt, itm0);
+
+            itm.Text:= it.FirstChild.NodeValue;
+
+            dn:= it.FindNode('subitems') as TDOMElement;
+            if  Assigned(dn) then
+                DoRecurseItems(dn, itm);
+
+            Inc(i);
+            it:= it.NextSibling as TDOMElement;
+            end;
+        end;
+
+    begin
+    cn:= ASourceNode.FindNode('items') as TDOMElement;
+
+    DoRecurseItems(cn, nil);
     end;
 
 function TGEOSDoMenuElement.Remove(AMenuItem: TGEOSDoMenuItem): Integer;
@@ -1414,8 +1745,8 @@ destructor TGEOSGraphicsStrElement.Destroy;
     end;
 
 procedure TGEOSGraphicsStrElement.AddItem(const AType: TGEOSGraphicsInstrType;
-        const ACmd: Byte; const AData: array of Byte;
-        const ADoubleW, AAdd1W: Boolean);
+    const ACmd: Byte; const AData: array of Byte; const ADoubleW: Boolean;
+    const AAdd1W: Boolean);
     var
     i: Integer;
     r: PGEOSGraphicsInstr;
@@ -1672,14 +2003,118 @@ procedure TGEOSGraphicsStrElement.PreparePreview(const ABitmap: TBitmap);
             end;
     end;
 
+procedure TGEOSGraphicsStrElement.PrepareCodeInit(const AStrings: TStrings);
+    begin
+    AStrings.Add(#9#9'LoadW'#9'r0, ' + FIdentifier);
+    AStrings.Add(#9#9'jsr'#9'GraphicsString');
+    AStrings.Add(EmptyStr);
+    end;
+
 procedure TGEOSGraphicsStrElement.PrepareCode(const AStrings: TStrings);
     begin
 
     end;
 
 procedure TGEOSGraphicsStrElement.PrepareData(const AStrings: TStrings);
-    begin
+    var
+    i,
+    j: Integer;
+    itm: PGEOSGraphicsInstr;
+    s: string;
 
+    procedure DoWriteWordX(const AIndex: Integer);
+        var
+        v: Word;
+        s: string;
+
+        begin
+        v:= itm^.InstrData[AIndex] or (itm^.InstrData[AIndex + 1] shl 8);
+        s:= #9#9'.word'#9'$' + IntToHex(v, 4);
+        if  itm^.DoubleW then
+            s:= s + ' | DOUBLE_W';
+        if  itm^.Add1W then
+            s:= s + ' | ADD1_W';
+
+        AStrings.Add(s);
+        end;
+
+    begin
+    AStrings.Add(FIdentifier + ':');
+
+    for i:= 0 to FItems.Count - 1 do
+        begin
+        itm:= FItems[i];
+
+        if  itm^.InstrCmd <= VAL_CMD_GEOSPSTR_PLNTXT then
+            begin
+            s:= ARR_LIT_GEOSGRPHSTRCMDS[itm^.InstrCmd];
+            if  Length(s) > 0 then
+                AStrings.Add(#9#9'.byte'#9 + UpperCase(s));
+            end;
+
+        case itm^.InstrCmd of
+            VAL_CMD_GEOSGSTR_MOVETO,
+            VAL_CMD_GEOSGSTR_LINETO,
+            VAL_CMD_GEOSGSTR_RECTTO,
+            VAL_CMD_GEOSGSTR_FMRECT:
+                begin
+                DoWriteWordX(0);
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm^.InstrData[2], 2));
+                end;
+            VAL_CMD_GEOSGSTR_NEWPTN:
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm^.InstrData[0], 2));
+            VAL_CMD_GEOSGSTR_ESCPTS:
+                ;
+
+            VAL_CMD_GEOSPSTR_BAKSPC,
+            VAL_CMD_GEOSPSTR_FWDSPC,
+            VAL_CMD_GEOSPSTR_LNFEED,
+            VAL_CMD_GEOSPSTR_HOMEPS,
+            VAL_CMD_GEOSPSTR_UPLINE,
+            VAL_CMD_GEOSPSTR_CRRTRN,
+            VAL_CMD_GEOSPSTR_UNDLON,
+            VAL_CMD_GEOSPSTR_UNDLOF,
+            VAL_CMD_GEOSPSTR_ESCGRP,
+            VAL_CMD_GEOSPSTR_REVSON,
+            VAL_CMD_GEOSPSTR_REVSOF,
+            VAL_CMD_GEOSPSTR_BOLDON,
+            VAL_CMD_GEOSPSTR_OUTLON,
+            VAL_CMD_GEOSPSTR_PLNTXT,
+            VAL_CMD_GEOSPSTR_ITLCON:
+                ;
+            VAL_CMD_GEOSPSTR_ESCRLR:
+                ;
+
+            VAL_CMD_GEOSPSTR_GOTOXP:
+                DoWriteWordX(0);
+            VAL_CMD_GEOSPSTR_GOTOYP:
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm^.InstrData[0], 2));
+            VAL_CMD_GEOSPSTR_GOTOXY:
+                begin
+                DoWriteWordX(0);
+                AStrings.Add(#9#9'.byte'#9'$' + IntToHex(itm^.InstrData[2], 2));
+                end;
+
+            VAL_CMD_GEOSPSTR_NEWFNT:
+                ;
+
+            VAL_CMD_GEOSPSTR_USELST:
+                AStrings.Add(#9#9'.byte'#9 + UpperCase(LIT_CMD_GEOSPSTR_USELST));
+            VAL_CMD_GEOSPSTR_SHRTCT:
+                AStrings.Add(#9#9'.byte'#9 + UpperCase(LIT_CMD_GEOSPSTR_SHRTCT));
+            VAL_CMD_GEOSPSTR_PUTSTR:
+                begin
+                s:= EmptyStr;
+                for j:= 0 to High(itm^.InstrData) do
+                    s:= s + string(AnsiChar(itm^.InstrData[j]));
+
+                AStrings.Add(#9#9'.byte'#9'"' + s + '", $00');
+                end;
+            end;
+        end;
+
+    AStrings.Add(#9#9'.byte'#9'NULL');
+    AStrings.Add(EmptyStr);
     end;
 
 procedure TGEOSGraphicsStrElement.SaveToXML(const ADoc: TXMLDocument;
@@ -1723,8 +2158,65 @@ procedure TGEOSGraphicsStrElement.SaveToXML(const ADoc: TXMLDocument;
     end;
 
 procedure TGEOSGraphicsStrElement.LoadFromXML(const ASource: TDOMNode);
-    begin
+    var
+    it,
+    cn: TDOMElement;
+//  dn: TDOMNode;
+    i,
+    j,
+    k: Integer;
+    itm: PGEOSGraphicsInstr;
+    s: string;
 
+    begin
+    cn:= ASource.FindNode('items') as TDOMElement;
+
+    it:= cn.FirstChild as TDOMElement;
+    while Assigned(it) do
+        begin
+        New(itm);
+
+        j:= StrToInt(it.AttribStrings['instrtype']);
+        itm^.InstrType:= TGEOSGraphicsInstrType(j);
+
+        j:= StrToInt(it.AttribStrings['instrcmd']);
+        itm^.InstrCmd:= j;
+
+        j:= StrToInt(it.AttribStrings['doublew']);
+        itm^.DoubleW:= Boolean(j);
+
+        j:= StrToInt(it.AttribStrings['add1w']);
+        itm^.Add1W:= Boolean(j);
+
+        j:= StrToInt(it.AttribStrings['datasize']);
+        SetLength(itm^.InstrData, j);
+
+        if  j > 0 then
+            begin
+//          s:= it.NodeName;
+//          dn:= it.FirstChild;
+//          s:= dn.NodeName;
+
+            i:= 0;
+            s:= it.FirstChild.NodeValue;
+            while Length(s) > 0 do
+                begin
+                j:= Pos(' ', s);
+                if  j > 0 then
+                    begin
+                    k:= StrToInt(Copy(s, 1, j - 1));
+                    itm^.InstrData[i]:= k;
+                    Inc(i);
+                    s:= Copy(s, j + 1, MaxInt);
+                    end
+                else
+                    s:= EmptyStr;
+                end;
+            end;
+
+        FItems.Add(itm);
+        it:= it.NextSibling as TDOMElement;
+        end;
     end;
 
 

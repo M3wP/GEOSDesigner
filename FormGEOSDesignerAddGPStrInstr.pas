@@ -367,9 +367,9 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoInitialise(
                     CmbCommand.Items.Add(ARR_LIT_GEOSGRPHSTRCMDS[
                             ARR_REC_PUTSTRNGDET[i].Cmd])
                 else if ARR_REC_PUTSTRNGDET[i].Cmd = VAL_CMD_GEOSPSTR_USELST then
-                    CmbCommand.Items.Add('UseLast')
+                    CmbCommand.Items.Add(LIT_CMD_GEOSPSTR_USELST)
                 else if ARR_REC_PUTSTRNGDET[i].Cmd = VAL_CMD_GEOSPSTR_SHRTCT then
-                    CmbCommand.Items.Add('ShortCut')
+                    CmbCommand.Items.Add(LIT_CMD_GEOSPSTR_SHRTCT)
                 else if ARR_REC_PUTSTRNGDET[i].Cmd = VAL_CMD_GEOSPSTR_PUTSTR then
                     CmbCommand.Items.Add('PutString');
 

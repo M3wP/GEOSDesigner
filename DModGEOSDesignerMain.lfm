@@ -11,6 +11,15 @@ object GEOSDesignerMainDMod: TGEOSDesignerMainDMod
     top = 16
     object MenuItem1: TMenuItem
       Caption = '&File'
+      object MenuItem11: TMenuItem
+        Action = ActFileNew
+      end
+      object MenuItem12: TMenuItem
+        Action = ActFileOpen
+      end
+      object MenuItem10: TMenuItem
+        Caption = '-'
+      end
       object MenuItem7: TMenuItem
         Action = ActFileSave
       end
@@ -32,6 +41,9 @@ object GEOSDesignerMainDMod: TGEOSDesignerMainDMod
     end
     object MenuItem5: TMenuItem
       Caption = '&Project'
+      object MenuItem13: TMenuItem
+        Action = ActProjectGenerate
+      end
     end
     object MenuItem4: TMenuItem
       Caption = '&Help'
@@ -64,11 +76,30 @@ object GEOSDesignerMainDMod: TGEOSDesignerMainDMod
       Category = 'File'
       Caption = '&Save'
       OnExecute = ActFileSaveExecute
+      ShortCut = 16467
     end
     object ActFileSaveAs: TAction
       Category = 'File'
       Caption = 'Save &As...'
       OnExecute = ActFileSaveAsExecute
+    end
+    object ActFileNew: TAction
+      Category = 'File'
+      Caption = '&New...'
+      OnExecute = ActFileNewExecute
+      ShortCut = 16462
+    end
+    object ActFileOpen: TAction
+      Category = 'File'
+      Caption = '&Open...'
+      OnExecute = ActFileOpenExecute
+      ShortCut = 16463
+    end
+    object ActProjectGenerate: TAction
+      Category = 'Project'
+      Caption = 'Generate Code...'
+      OnExecute = ActProjectGenerateExecute
+      ShortCut = 120
     end
   end
   object ImgLstGrphsStr: TImageList
@@ -1315,7 +1346,14 @@ object GEOSDesignerMainDMod: TGEOSDesignerMainDMod
     top = 16
   end
   object OpenDialog1: TOpenDialog
+    DefaultExt = '.gdesign'
+    Filter = 'GEOS Designer Files (*.gdesign)|*.gdesign'
+    Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
     left = 282
     top = 16
+  end
+  object SaveDialog2: TSaveDialog
+    left = 25
+    top = 168
   end
 end
