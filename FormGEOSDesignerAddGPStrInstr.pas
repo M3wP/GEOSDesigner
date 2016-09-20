@@ -63,7 +63,7 @@ type
 
     public
         function  ShowAdd(const AMode: TGEOSGraphicsInstrType;
-                var AInstr: TGEOSGraphicsInstr): TModalResult;
+                out AInstr: TGEOSGraphicsInstr): TModalResult;
         function  ShowEdit(const AInstr: PGEOSGraphicsInstr): TModalResult;
     end;
 
@@ -382,7 +382,7 @@ procedure TGEOSDesignerAddGPStrInstrForm.DoInitialise(
 
 function TGEOSDesignerAddGPStrInstrForm.ShowAdd(
         const AMode: TGEOSGraphicsInstrType;
-        var AInstr: TGEOSGraphicsInstr): TModalResult;
+        out AInstr: TGEOSGraphicsInstr): TModalResult;
     begin
     DoInitialise(AMode, False, @AInstr);
     Result:= ShowModal;

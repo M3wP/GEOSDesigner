@@ -49,6 +49,8 @@ type
         ChkBxDoMenuItmVisible: TCheckBox;
         ChkBxDoIconsItmDblW: TCheckBox;
         ChkBxDoIconsItmDblB: TCheckBox;
+        ChkBxPSAdd1W: TCheckBox;
+        ChkBxPSDblW: TCheckBox;
         ChkLstBxElements: TCheckListBox;
         CmbDoMenuItmType: TComboBox;
         CmbDoMenuItmAlign: TComboBox;
@@ -74,6 +76,9 @@ type
         Label21: TLabel;
         Label22: TLabel;
         Label23: TLabel;
+        Label29: TLabel;
+        Label30: TLabel;
+        Label31: TLabel;
         LblDoIconItmIdent: TLabel;
         Label24: TLabel;
         Label25: TLabel;
@@ -88,14 +93,16 @@ type
         Label8: TLabel;
         Label9: TLabel;
         LblDoMenuItmIdent: TLabel;
-        LblGrphStrIdent: TLabel;
         LblDoMenuIdent: TLabel;
         LblDoIconsIdent: TLabel;
+        LblGrphStrIdent: TLabel;
         LstBxDoIcons: TListBox;
         LstVwGrphStrItems: TListView;
         NtBkDetails: TNotebook;
         Panel10: TPanel;
         Panel11: TPanel;
+        Panel12: TPanel;
+        PnlPutStrPos: TPanel;
         Panel3: TPanel;
         Panel4: TPanel;
         Panel5: TPanel;
@@ -116,6 +123,8 @@ type
         SpEdtDoIconsYPos: TSpinEdit;
         SpEdtDoIconsItmXPos: TSpinEdit;
         SpEdtDoIconsItmYPos: TSpinEdit;
+        SpEdtPSXPos: TSpinEdit;
+        SpEdtPSYPos: TSpinEdit;
         Splitter1: TSplitter;
         Splitter2: TSplitter;
         Splitter3: TSplitter;
@@ -138,6 +147,8 @@ type
         procedure ChkBxDoIconsShowMouseChange(Sender: TObject);
         procedure ChkBxDoMenuItmCnstrndChange(Sender: TObject);
         procedure ChkBxDoMenuItmVisibleChange(Sender: TObject);
+        procedure ChkBxPSAdd1WChange(Sender: TObject);
+        procedure ChkBxPSDblWChange(Sender: TObject);
         procedure ChkLstBxElementsClick(Sender: TObject);
         procedure ChkLstBxElementsClickCheck(Sender: TObject);
         procedure ChkLstBxElementsItemClick(Sender: TObject; Index: integer);
@@ -156,6 +167,8 @@ type
         procedure SpEdtDoMenuItmLeftChange(Sender: TObject);
         procedure SpEdtDoMenuItmRightChange(Sender: TObject);
         procedure SpEdtDoMenuItmTopChange(Sender: TObject);
+        procedure SpEdtPSXPosChange(Sender: TObject);
+        procedure SpEdtPSYPosChange(Sender: TObject);
         procedure TlBtnGrphAddClick(Sender: TObject);
         procedure TlBtnGrphDeleteClick(Sender: TObject);
         procedure TlBtnGrphEditClick(Sender: TObject);
@@ -428,6 +441,30 @@ procedure TGEOSDesignerMainFrame.SpEdtDoMenuItmTopChange(Sender: TObject);
             end;
     end;
 
+procedure TGEOSDesignerMainFrame.SpEdtPSXPosChange(Sender: TObject);
+    var
+    e: TGEOSPutStringElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSPutStringElement;
+        e.StartX:= SpEdtPSXPos.Value;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.SpEdtPSYPosChange(Sender: TObject);
+    var
+    e: TGEOSPutStringElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSPutStringElement;
+        e.StartY:= SpEdtPSYPos.Value;
+        end;
+    end;
+
 procedure TGEOSDesignerMainFrame.TlBtnGrphAddClick(Sender: TObject);
     var
     e: TGEOSGraphicsStrElement;
@@ -681,6 +718,30 @@ procedure TGEOSDesignerMainFrame.ChkBxDoMenuItmVisibleChange(Sender: TObject);
             end;
     end;
 
+procedure TGEOSDesignerMainFrame.ChkBxPSAdd1WChange(Sender: TObject);
+    var
+    e: TGEOSPutStringElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSPutStringElement;
+        e.Add1W:= ChkBxPSAdd1W.Checked;
+        end;
+    end;
+
+procedure TGEOSDesignerMainFrame.ChkBxPSDblWChange(Sender: TObject);
+    var
+    e: TGEOSPutStringElement;
+
+    begin
+    if  not FChanging then
+        begin
+        e:= FSelectedElem as TGEOSPutStringElement;
+        e.DoubleW:= ChkBxPSDblW.Checked;
+        end;
+    end;
+
 procedure TGEOSDesignerMainFrame.ChkBxDoIconsItmDblWChange(Sender: TObject);
     var
     e: TGEOSDoIconsElement;
@@ -761,6 +822,7 @@ procedure TGEOSDesignerMainFrame.DoDoIconsItemSelect(const AItem: Integer);
 procedure TGEOSDesignerMainFrame.DoInitGrphStrElemView;
     var
     e: TGEOSGraphicsStrElement;
+    p: TGEOSPutStringElement;
     i,
     j: Integer;
     s: string;
@@ -815,6 +877,41 @@ procedure TGEOSDesignerMainFrame.DoInitGrphStrElemView;
         TlBtnGrphEdit.Enabled:= False;
         TlBtnGrphDelete.Enabled:= False;
         end;
+
+    if  FSelectedElem is TGEOSPutStringElement then
+        begin
+        PnlPutStrPos.Visible:= True;
+
+        p:= FSelectedElem as TGEOSPutStringElement;
+
+        FChanging:= True;
+        try
+            SpEdtPSXPos.Value:= p.StartX;
+            SpEdtPSXPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Width - 1;
+            SpEdtPSYPos.Value:= p.StartY;
+            SpEdtPSYPos.MaxValue:= ARR_REC_GEOSDISPLAYRES[GEOSDispMode].Height - 1;
+
+            if  GEOSDispMode = gdm80Column then
+                begin
+                ChkBxPSDblW.Checked:= p.DoubleW;
+                ChkBxPSDblW.Enabled:= True;
+                ChkBxPSAdd1W.Checked:= p.Add1W;
+                ChkBxPSAdd1W.Enabled:= True;
+                end
+            else
+                begin
+                ChkBxPSDblW.Checked:= False;
+                ChkBxPSDblW.Enabled:= False;
+                ChkBxPSAdd1W.Checked:= False;
+                ChkBxPSAdd1W.Enabled:= False;
+                end;
+
+            finally
+            FChanging:= False;
+            end;
+        end
+    else
+        PnlPutStrPos.Visible:= False;
     end;
 
 procedure TGEOSDesignerMainFrame.DoInitDoMenuElemView;

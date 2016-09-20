@@ -356,7 +356,7 @@ procedure TGEOSDesignerMainDMod.ActFileSaveExecute(Sender: TObject);
     doc:= TXMLDocument.Create;
     try
         rn:= doc.CreateElement('GEOSDesigner');
-        TDOMElement(rn).SetAttribute('version', '0.2');
+        TDOMElement(rn).SetAttribute('version', '0.3');
         TDOMElement(rn).SetAttribute('dispMode', IntToStr(Ord(GEOSDispMode)));
 
         Doc.Appendchild(rn);
@@ -453,15 +453,18 @@ procedure TGEOSDesignerMainDMod.ActProjectGenerateExecute(Sender: TObject);
         while AStream.Position < AStream.Size do
             begin
             if  (i > 0)
-            and (i mod 16 = 0) then
+            and (i mod 8 = 0) then
                 begin
                 AStrings.Add(s);
                 i:= 0;
                 s:= #9#9'.byte'#9;
                 end;
 
+            if  (i > 0) then
+                s:= s + ', ';
+
             b:= AStream.ReadByte;
-            s:= s + Format('$%2.2x, ', [b]);
+            s:= s + Format('$%2.2x', [b]);
 
             Inc(i);
             end;
@@ -758,6 +761,7 @@ function TGEOSDesignerMainDMod.GetIcons(
 procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
     var
     e: TGEOSGraphicsStrElement;
+    p: TGEOSPutStringElement;
     m: TGEOSDoMenuElement;
     mi,
     sm: TGEOSDoMenuItem;
@@ -815,26 +819,33 @@ procedure TGEOSDesignerMainDMod.DoCreateDefaultProject;
     hh:= (y1 and $FF00) shr 8;
     e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_FMRECT, [wl, wh, hl, hh]);
 
-    x1:= x1 + 2;
-    y1:= y1 + 2;
-    wl:= x1 and $00FF;
-    wh:= (x1 and $FF00) shr 8;
-    hl:= y1 and $00FF;
-    hh:= (y1 and $FF00) shr 8;
-    e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_MOVETO, [wl, wh, hl, hh]);
-    e.AddItem(ggiGraphics, VAL_CMD_GEOSGSTR_ESCPTS, []);
+    FElements.Add(e);
 
-    e.AddItem(ggiString, VAL_CMD_GEOSPSTR_BOLDON, []);
+    p:= TGEOSPutStringElement.Create('AppText');
+
+    x1:= x1 + 2;
+    y1:= y1 + 2 + GEOSSystemFont.Baseline + 1;
+
+    p.StartX:= x1;
+    p.StartY:= y1;
+
+//  wl:= x1 and $00FF;
+//  wh:= (x1 and $FF00) shr 8;
+//  hl:= y1 and $00FF;
+//  hh:= (y1 and $FF00) shr 8;
+//  p.AddItem(ggiString, VAL_CMD_GEOSPSTR_GOTOXY, [wl, wh, hl, hh]);
+
+    p.AddItem(ggiString, VAL_CMD_GEOSPSTR_BOLDON, []);
 
     s:= FProjectName;
     SetLength(d, Length(s));
     for i:= 1 to Length(s) do
         d[i - 1]:= Byte(AnsiChar(s[i]));
-    e.AddItem(ggiString, VAL_CMD_GEOSPSTR_PUTSTR, d);
+    p.AddItem(ggiString, VAL_CMD_GEOSPSTR_PUTSTR, d);
 
-    e.AddItem(ggiString, VAL_CMD_GEOSPSTR_PLNTXT, []);
+    p.AddItem(ggiString, VAL_CMD_GEOSPSTR_PLNTXT, []);
 
-    FElements.Add(e);
+    FElements.Add(p);
 
     m:= TGEOSDoMenuElement.Create('MainMenu');
     mi:= TGEOSDoMenuItem.Create('GEOSMenu', gmtSubMenu, m, gmaHorizontal);

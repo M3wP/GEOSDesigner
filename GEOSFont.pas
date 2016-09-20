@@ -734,7 +734,8 @@ procedure TGEOSFont.TextOut(const ACanvas: TCanvas; AX, AY: Integer;
             w:= FDetails[FSizeIdx].Widths[b];
             sr:= Rect(FDetails[FSizeIdx].Offsets[b], 0,
                     FDetails[FSizeIdx].Offsets[b] + w, FSizes[FSizeIdx]);
-            dr:= Rect(AX, AY, AX + w, AY + FSizes[FSizeIdx]);
+            dr:= Rect(AX, AY - (FDetails[FSizeIdx].Baseline + 1), AX + w,
+                    AY + FSizes[FSizeIdx] - (FDetails[FSizeIdx].Baseline + 1));
 
             if  FStyle = [] then
                 ACanvas.CopyRect(dr, FDetails[FSizeIdx].Bitmap.Canvas, sr)

@@ -230,12 +230,33 @@ type
 { TGEOSPutStringElement }
 
     TGEOSPutStringElement = class(TGEOSGraphicsStrElement)
+    private
+        FStartX,
+        FStartY: Word;
+        FDoubleW,
+        FAdd1W: Boolean;
+
+        procedure SetStartX(const AValue: Word);
+        procedure SetStartY(const AValue: Word);
+        procedure SetDoubleW(const AValue: Boolean);
+        procedure SetAdd1W(const AValue: Boolean);
+
     public
         constructor Create(const AIdent: string); override;
 
         class function ElementName: string; override;
 
+        procedure PreparePreview(const ABitmap: TBitmap); override;
         procedure PrepareCodeInit(const AStrings: TStrings); override;
+
+        procedure SaveToXML(const ADoc: TXMLDocument;
+                const AParent: TDOMNode); override;
+        procedure LoadFromXML(const ASource: TDOMNode); override;
+
+        property  StartX: Word read FStartX write SetStartX;
+        property  StartY: Word read FStartY write SetStartY;
+        property  DoubleW: Boolean read FDoubleW write SetDoubleW;
+        property  Add1W: Boolean read FAdd1W write SetAdd1W;
     end;
 
 
@@ -434,6 +455,12 @@ type
                 read  GetIconsDblBX write SetIconsDblBX;
     end;
 
+//------------------------------------------------------------------------------
+//DoDlgBox
+//------------------------------------------------------------------------------
+
+
+
 
 function  GEOSDispMode: TGEOSDisplayMode; inline;
 procedure SetGEOSDispMode(const AValue: TGEOSDisplayMode);
@@ -582,6 +609,42 @@ procedure SetGEOSActiveIcons(const AValue: TGEOSDoIconsElement);
 
 { TGEOSPutStringElement }
 
+procedure TGEOSPutStringElement.SetStartX(const AValue: Word);
+    begin
+    if  FStartX <> AValue then
+        begin
+        FStartX:= AValue;
+        DoChanged;
+        end;
+    end;
+
+procedure TGEOSPutStringElement.SetStartY(const AValue: Word);
+    begin
+    if  FStartY <> AValue then
+        begin
+        FStartY:= AValue;
+        DoChanged;
+        end;
+    end;
+
+procedure TGEOSPutStringElement.SetDoubleW(const AValue: Boolean);
+    begin
+    if  FDoubleW <> AValue then
+        begin
+        FDoubleW:= AValue;
+        DoChanged;
+        end;
+    end;
+
+procedure TGEOSPutStringElement.SetAdd1W(const AValue: Boolean);
+    begin
+    if  FAdd1W <> AValue then
+        begin
+        FAdd1W:= AValue;
+        DoChanged;
+        end;
+    end;
+
 constructor TGEOSPutStringElement.Create(const AIdent: string);
     begin
     inherited Create(AIdent);
@@ -595,11 +658,69 @@ class function TGEOSPutStringElement.ElementName: string;
     Result:= LIT_CAP_GEOSELEMPUTSTRG;
     end;
 
+procedure TGEOSPutStringElement.PreparePreview(const ABitmap: TBitmap);
+    var
+    x: Integer;
+
+    begin
+    x:= GEOSNormalizeX(FStartX, FDoubleW, FAdd1W);
+    ABitmap.Canvas.PenPos:= Point(x, FStartY);
+
+    inherited PreparePreview(ABitmap);
+    end;
+
 procedure TGEOSPutStringElement.PrepareCodeInit(const AStrings: TStrings);
+    var
+    s: string;
+
     begin
     AStrings.Add(#9#9'LoadW'#9'r0, ' + FIdentifier);
+
+    s:= #9#9'LoadW'#9'r11, ' + IntToHex(FStartX, 4);
+    if  FDoubleW then
+        s:= s + ' | DOUBLE_W';
+    if  FAdd1W then
+        s:= s + ' | ADD1_W';
+
+    AStrings.Add(s);
+
+    AStrings.Add(#9#9'LoadB'#9'r1H, ' + IntToHex(FStartY, 2));
+
     AStrings.Add(#9#9'jsr'#9'PutString');
     AStrings.Add(EmptyStr);
+    end;
+
+procedure TGEOSPutStringElement.SaveToXML(const ADoc: TXMLDocument;
+        const AParent: TDOMNode);
+    var
+    en: TDOMElement;
+
+    begin
+    en:= ADoc.CreateElement('start');
+
+    en.SetAttribute('x', IntToStr(FStartX));
+    en.SetAttribute('y', IntToStr(FStartY));
+    en.SetAttribute('doubleW', IntToStr(Ord(FDoubleW)));
+    en.SetAttribute('add1W', IntToStr(Ord(FAdd1W)));
+
+    AParent.AppendChild(en);
+
+    inherited SaveToXML(ADoc, AParent);
+    end;
+
+procedure TGEOSPutStringElement.LoadFromXML(const ASource: TDOMNode);
+    var
+    en: TDOMElement;
+
+    begin
+    en:= ASource.FindNode('start') as TDOMElement;
+
+    FStartX:= StrToInt(en.AttribStrings['x']);
+    FStartY:= StrToInt(en.AttribStrings['y']);
+    FDoubleW:= Boolean(StrToInt(en.AttribStrings['doubleW']));
+    FAdd1W:= Boolean(StrToInt(en.AttribStrings['add1W']));
+
+    inherited LoadFromXML(ASource);
     end;
 
 
@@ -1183,7 +1304,7 @@ procedure TGEOSDoMenuElement.PrepareData(const AStrings: TStrings);
                 AStrings.Add(#9#9'.byte'#9 + IntToHex(AItems.Count, 2)+' | '+s);
                 end;
 
-            s:= FIdentifier + IntToStr(mt);
+            s:= FIdentifier + 'Text' + IntToStr(mt);
             Inc(mt);
             AStrings.Add(#9#9'.word'#9 + s);
 
@@ -1216,7 +1337,7 @@ procedure TGEOSDoMenuElement.PrepareData(const AStrings: TStrings);
         for i:= 0 to AItems.Count - 1 do
             begin
             itm:= TGEOSDoMenuItem(AItems[i]);
-            AStrings.Add(FIdentifier + IntToStr(mt) + ':');
+            AStrings.Add(FIdentifier + 'Text' + IntToStr(mt) + ':');
             Inc(mt);
             AStrings.Add(#9#9'.byte'#9'"' + itm.FText + '", $00');
             end;
@@ -1529,7 +1650,8 @@ procedure TGEOSDoMenuItem.PreparePreview(const ABitmap: TBitmap);
             v:= (mi.FSubItems.Count > 0) and
                     TGEOSDoMenuItem(mi.FSubItems[0]).FVisible;
 
-            GEOSSystemFont.TextOut(ABitmap.Canvas, mp.x, mp.y, mi.FText);
+            GEOSSystemFont.TextOut(ABitmap.Canvas, mp.x, mp.y +
+                    GEOSSystemFont.Baseline + 1, mi.FText);
 
             if  FAlignment = gmaHorizontal then
                 begin
@@ -2108,7 +2230,7 @@ procedure TGEOSGraphicsStrElement.PrepareData(const AStrings: TStrings);
                 for j:= 0 to High(itm^.InstrData) do
                     s:= s + string(AnsiChar(itm^.InstrData[j]));
 
-                AStrings.Add(#9#9'.byte'#9'"' + s + '", $00');
+                AStrings.Add(#9#9'.byte'#9'"' + s + '"');
                 end;
             end;
         end;
