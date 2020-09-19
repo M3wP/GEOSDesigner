@@ -497,7 +497,7 @@ procedure DoDecodeToTemp(const ACount: Integer; const ADataIn: TStream;
             for i:= 0 to c - 1 do
                 t.WriteByte(b);
             end
-        else if c in [128..220] then
+        else if c in [128..219] then
             begin
             c:= c - 128;
             for i:= 0 to c - 1 do
@@ -535,11 +535,9 @@ procedure GEOSDecompactBitmap(const ADataIn, ADataOut: TStream);
             c:= ADataIn.ReadByte;
             ADataIn.Position:= ADataIn.Position - 1;
 
-            if  c in [221..255] then
+            if  c in [220..255] then
                 begin
-//dengland      This is what the documentation says but the data says otherwise.
-//              c:= ADataIn.ReadByte - 220;
-                c:= ADataIn.ReadByte - 221;
+                c:= ADataIn.ReadByte - 220;
                 b:= ADataIn.ReadByte;
                 DoDecodeToTemp(c, ADataIn, t);
                 end
@@ -559,7 +557,7 @@ procedure GEOSDecompactBitmap(const ADataIn, ADataOut: TStream);
     end;
 
 const
-    VAL_SIZ_MAXWINDOW = 92;
+    VAL_SIZ_MAXWINDOW = 91;
 type
     PGEOSBitmapCmd = ^TGEOSBitmapCmd;
     TGEOSBitmapCmd = record
@@ -670,7 +668,7 @@ procedure DoProcessSequence(const AList: TList; const AWindow: array of Byte;
                 begin
                 New(c);
                 SetLength(c^.Data, idxx - idxr + 3);
-                c^.Cmd:= 221 + Length(c^.Data) - 2;
+                c^.Cmd:= 220 + Length(c^.Data) - 1;
                 c^.Data[0]:= rcnt;
                 c^.Data[1]:= 128 + idxx - idxr + 1;
                 for j:= 2 to Length(c^.Data) - 1 do
